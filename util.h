@@ -9,7 +9,7 @@
 #define N_DBLOCKS 10
 #define N_IBLOCKS 4
 #define BLOCKSIZE 512
-#define N_INODES  20 
+#define N_INODES  10 
 
 #define REGULAR   0
 #define DIRECTORY 1
@@ -42,7 +42,7 @@ typedef struct inode {
 } inode;
 
 typedef struct dentry {
-	int name;
+	int n;      //inode number
 	int size;   //size to offset to next dentry
 	int type;
 	int length; //file name length
