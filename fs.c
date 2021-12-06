@@ -4,6 +4,9 @@
 #include <stdint.h>
 #include "util.h"
 
+#define INODEOFFSET (BLOCKSIZE + sb->inode_offset * BLOCKSIZE)
+#define DATAOFFSET  (BLOCKSIZE + sb->data_offset  * BLOCKSIZE)
+
 superblock *sb;
 void *buffer;
 FILE *disk;
@@ -62,8 +65,110 @@ void create_new(int size){
         	free_and_exit();
 	}
 
+	/*creating mountpoint for home*/
+	if (fseek(disk, INODEOFFSET, SEEK_SET) == -1){
+        free_and_exit();
+    }
+	inode *home = malloc(sizeof(inode));
+	buffer = malloc(sizeof(inode));
+	fread(buffer, 1, sizeof(inode), disk);
+	home = (inode*) buffer;
+	home->type = MNT_PNT;
+	home->nlink = 1;
+	/*creating folder for usr inside home*/
+	home->dblocks[0] = 0;
+	dentry *usr = malloc(sizeof(dentry));
+	usr->n = 1;
+	usr->length = 8;
+	usr->type = DIRECTORY;
+	usr->size = (int)sizeof(dentry) + usr->length;
+	home->size+=usr->size;
+	/*creating dentry for file called file.txt*/
+	dentry *f = malloc(sizeof(dentry));
+	f->n = 2;
+	f->length = 8;
+	f->type = REGULAR;
+	f->size = (int)sizeof(dentry) + f->length; 
+	home->size+=f->size;
 
+	if (fseek(disk, INODEOFFSET, SEEK_SET) == -1){
+        free_and_exit();
+    }
+	if (fwrite(home, 1, sizeof(inode), disk) != sizeof(inode))
+    	free_and_exit();
+	
+	free(buffer);
+	
+	/*writing dentry for usr to disk*/
+	if (fseek(disk, DATAOFFSET, SEEK_SET) == -1){
+        free_and_exit();
+    }
+	void *filename = "usr";
 
+	printf("ftell: %ld\n", ftell(disk));
+
+	if (fwrite(usr, 1, sizeof(dentry), disk) != sizeof(dentry))
+        free_and_exit();
+	if (fwrite(filename, 1, sizeof(filename), disk) != sizeof(filename))
+        free_and_exit();
+
+	/*writing dentry for file.txt to disk*/
+	printf("ftell: %ld\n", ftell(disk));
+	filename = "file.txt";
+	if (fwrite(f, 1, sizeof(dentry), disk) != sizeof(dentry))
+        free_and_exit();
+	if (fwrite(filename, 1, sizeof(filename), disk) != sizeof(filename))
+       	free_and_exit();	
+
+	/*creating the actual node for usr*/
+	printf("inode offset: %d\n", INODEOFFSET + (int)sizeof(inode));
+    inode *usr_inode = malloc(sizeof(inode));
+    buffer = malloc(sizeof(inode));
+	if (fseek(disk, INODEOFFSET+(int)sizeof(inode), SEEK_SET) == -1){
+        free_and_exit();
+    }
+    fread(buffer, 1, sizeof(inode), disk);
+    usr_inode = (inode*) buffer;
+    usr_inode->type = DIRECTORY;
+    usr_inode->nlink = 1;
+	if (fseek(disk, INODEOFFSET+(int)sizeof(inode), SEEK_SET) == -1){
+        free_and_exit();
+    }
+	if (fwrite(usr_inode, 1, sizeof(inode), disk) != sizeof(inode))
+        free_and_exit();
+
+    free(buffer);
+
+	/*creating the actual node for file.txt*/
+	inode *f_inode = malloc(sizeof(inode));
+    buffer = malloc(sizeof(inode));
+	if (fseek(disk, INODEOFFSET+(2*(int)sizeof(inode)), SEEK_SET) == -1){
+        free_and_exit();
+    }
+    fread(buffer, 1, sizeof(inode), disk);
+    f_inode = (inode*) buffer;
+    f_inode->type = REGULAR;
+    f_inode->nlink = 1;
+    f_inode->dblocks[0] = 1;
+	f_inode->size += 80;
+    if (fseek(disk, INODEOFFSET+(2*(int)sizeof(inode)), SEEK_SET) == -1){
+        free_and_exit();
+    }
+    if (fwrite(f_inode, 1, sizeof(inode), disk) != sizeof(inode))
+        free_and_exit();
+
+    free(buffer);
+
+	/*filling file.txt with content*/
+	char *content = "This is a test file.";
+	if (fseek(disk, DATAOFFSET + BLOCKSIZE, SEEK_SET) == -1){
+        free_and_exit();
+    }
+	for (int i = 0; i<4; i++){
+		if (fwrite(content, 1, strlen(content), disk) != strlen(content))
+        	free_and_exit();
+	}
+	
 
 	/*-----SUPERBLOCK TEST-------------------------------*/
 	buffer = malloc(sizeof(superblock));
@@ -80,21 +185,58 @@ void create_new(int size){
 	fseek(disk, 0, SEEK_END);
 	free(test);
 	/*----------------------------------------------------*/
-	/*-----INODES TEST------------------------------------*/
+
+	/*-----INODES & DENTRY TESTS--------------------------*/
 	buffer = malloc(sizeof(inode));
 	fseek(disk, 512+104, SEEK_SET);
 	fread(buffer, 1, sizeof(inode), disk);
 	inode *itest = (inode *) buffer;
-	printf("-----inode test-------------------------------\n");
+	printf("-----inode test----------------------------\n");
     printf("size: %d\n", itest->size);
     printf("nlink: %d\n", itest->nlink);
     printf("next: %d\n", itest->next_inode);
-    printf("protect: %d\n", itest->protect);
+    printf("type: %d\n", itest->type);
     printf("-------------------------------------------\n");
-	fseek(disk, 0, SEEK_END);
-	free(itest);
+
+	printf("-----dentry test----------------------------\n");
+	printf("first data block: %d\n", itest->dblocks[0]);
+	fseek(disk, DATAOFFSET, SEEK_SET);
+	free(buffer);
+	buffer = malloc(sizeof(dentry));
+	for (int i = 0; i<2; i++){
+		
+		printf("ftell: %ld\n", ftell(disk));
+		fread(buffer, 1, sizeof(dentry), disk);
+		dentry *dtest = (dentry *) buffer;
+    	printf("inode:  %d\n", dtest->n     );
+		printf("size:   %d\n", dtest->size  );
+    	printf("type:   %d\n", dtest->type  );
+    	printf("length: %d\n", dtest->length);
+		int len = dtest->length;
+		free(buffer);
+		buffer = malloc(len);
+		printf("ftell: %ld\n", ftell(disk));
+		fread(buffer, 1, len, disk);
+		//fseek(disk, DATAOFFSET+sizeof(dentry)+8, SEEK_SET);
+		printf("ftell: %ld\n", ftell(disk));
+    	printf("dentry name: %s\n", (char*)buffer);
+		printf("-----\n");
+	}
+    printf("-------------------------------------------\n");
+	free(buffer);
 	/*----------------------------------------------------*/
 	
+	/*-----FILE TEST------------------------------------*/
+	fseek(disk, DATAOFFSET+BLOCKSIZE, SEEK_SET);
+	buffer = malloc((long)80);
+	fread(buffer, 1, 80, disk);
+	printf("Contents of file: %s\n", (char *)buffer);
+	free(buffer);
+
+
+
+	/*----------------------------------------------------*/
+
 	free(sb);
 	fclose(disk);
 	
