@@ -15,6 +15,16 @@
 #define DIRECTORY 1
 #define MNT_PNT   2
 
+
+/* open file descriptor table definitions */
+enum open_fd_table_enum {FD, FD_INODE, FD_SEEK_POS, FD_USED, FD_MAX};
+#define FD_TABLE_SIZE 100
+
+
+/* file descriptor array */
+extern int open_fd_table[ FD_TABLE_SIZE ][ FD_MAX ];
+
+
 typedef struct superblock {
   	int size;
   	int inode_offset;
