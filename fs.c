@@ -26,10 +26,23 @@ void create_new(int size){
 	sb->size = BLOCKSIZE;
 	sb->inode_offset = 0;
 	sb->data_offset = 4;
-	sb->free_inode = 1;
-	sb->free_block = 0;
+	sb->free_inode = 3;
+	sb->free_block = 2;
 	printf("Size of sb: %ld\n", sizeof(superblock));
 	initialize_newdisk("testdisk");
+
+	/*malloc for size to get garbage*/
+	int bytes = size*1024*1024;
+	buffer = malloc(bytes);
+	/*fill disk with garbage*/
+	if (fseek(disk, 0, SEEK_SET) == -1){
+        free_and_exit();
+    }
+    if (fwrite(buffer, 1, bytes, disk) != bytes){
+        free_and_exit();
+    }
+
+	/*superblock overrides garbage*/
 	if (fseek(disk, 0, SEEK_SET) == -1){
 		free_and_exit();
 	}
@@ -40,17 +53,21 @@ void create_new(int size){
 		free_and_exit();
 	}
 	
-	/*fill rest of block (with zeroes?)*/
+	/*NO NEED BECAUSE OF FILLING WITH GARBAGE FROM BEGINNING*/
+	/*
+	//fill rest of block (with zeroes?)
 	void *filler = malloc(sizeof(int));
 	*(int *) filler = 0;
 	
 	if (fwrite(filler, 1, BLOCKSIZE-sizeof(superblock), disk) != BLOCKSIZE-sizeof(superblock)){
         free_and_exit();
     }
+	*/
 
 	/*creating inodes*/
-	if (fseek(disk, 0, SEEK_END) == -1)
+	if (fseek(disk, BLOCKSIZE, SEEK_SET) == -1){
 		free_and_exit();
+	}
 	inode *temp;
 	temp = malloc(sizeof(inode));
 	printf("Size of inode: %ld\n",sizeof(inode));
@@ -61,8 +78,6 @@ void create_new(int size){
 		temp->next_inode = i+1;
 		if (fwrite(temp, 1, sizeof(inode), disk) != sizeof(inode))
 			free_and_exit();
-		if (fseek(disk, 0, SEEK_END) == -1)
-        	free_and_exit();
 	}
 
 	/*creating mountpoint for home*/
@@ -168,6 +183,29 @@ void create_new(int size){
 		if (fwrite(content, 1, strlen(content), disk) != strlen(content))
         	free_and_exit();
 	}
+	/*filling free data blocks*/
+	if (fseek(disk, DATAOFFSET + 2*BLOCKSIZE, SEEK_SET) == -1){
+        free_and_exit();
+    }
+	int to_fill = size*2042-7;
+	int cur = 3;
+	void *nextfree = malloc(sizeof(int));
+	printf("TOFILL: %d\n", to_fill);
+	for (int i = 0; i<to_fill-1; i++){
+		if (fseek(disk, DATAOFFSET + (cur-1)*BLOCKSIZE, SEEK_SET) == -1){
+        	free_and_exit();
+    	}
+		*(int *) nextfree = cur;
+		fwrite(nextfree, 1, sizeof(int), disk);
+		cur++;
+	}
+	if (fseek(disk, DATAOFFSET + (cur-1)*BLOCKSIZE, SEEK_SET) == -1){
+		free_and_exit();
+    }
+    *(int *) nextfree = -1;
+   	fwrite(nextfree, 1, sizeof(int), disk);
+	free(nextfree);
+
 	
 
 	/*-----SUPERBLOCK TEST-------------------------------*/
@@ -232,9 +270,16 @@ void create_new(int size){
 	fread(buffer, 1, 80, disk);
 	printf("Contents of file: %s\n", (char *)buffer);
 	free(buffer);
+	/*----------------------------------------------------*/
 
-
-
+	/*-----FREE BLOCKS TEST-------------------------------*/
+	for (int i = 2; i< 2037; i++){
+		fseek(disk, DATAOFFSET+i*BLOCKSIZE, SEEK_SET);
+		buffer = malloc(sizeof(int));
+		fread(buffer, 1, sizeof(int), disk);
+		printf("Block %d is pointing at block %d\n", i, *(int *)buffer);
+		free(buffer);
+	}
 	/*----------------------------------------------------*/
 
 	free(sb);
