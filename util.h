@@ -17,7 +17,7 @@
 
 
 /* open file descriptor table definitions */
-enum open_fd_table_enum {FD, FD_INODE, FD_SEEK_POS, FD_USED, FD_MAX};
+enum open_fd_table_enum {FD_INODE, FD_SEEK_POS, FD_MAX};
 #define FD_TABLE_SIZE 100
 
 
