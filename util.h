@@ -24,6 +24,8 @@ enum open_fd_table_enum {FD_INODE, FD_SEEK_POS, FD_MAX};
 /* file descriptor array */
 extern int open_fd_table[ FD_TABLE_SIZE ][ FD_MAX ];
 
+#define MAX_OPEN 10
+
 
 typedef struct superblock {
   	int size;
@@ -56,6 +58,24 @@ typedef struct dentry {
 	int size;   //size to offset to next dentry
 	int type;
 	int length; //file name length
+	int last;
 } dentry;
 
+typedef struct inode_entry {
+	int n;
+	inode *ptr;
+} inode_entry;
+
+extern inode_entry *inode_table[MAX_OPEN];
+
 #endif
+
+
+
+
+
+
+
+
+
+
