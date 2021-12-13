@@ -227,11 +227,11 @@ void create_new(int size){
         	free_and_exit();
 	}
 	/*filling free data blocks*/
-	if (fseek(disk, DATAOFFSET + 2*BLOCKSIZE, SEEK_SET) == -1){
+	if (fseek(disk, DATAOFFSET + 3*BLOCKSIZE, SEEK_SET) == -1){
         free_and_exit();
     }
-	int to_fill = size*2042-7;
-	int cur = 3;
+	int to_fill = size*2042-8;
+	int cur = 4;
 	void *nextfree = malloc(sizeof(int));
 	printf("TOFILL: %d\n", to_fill);
 	for (int i = 0; i<to_fill-1; i++){
