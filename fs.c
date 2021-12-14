@@ -223,6 +223,8 @@ int f_read(int fd, int bytes, void* buffer){
 
 	int remaining = file_inode->size;
 
+	if (seek_pos >= file_inode->size)
+		return 0;
 	/*copy direct data blocks, if any*/
 	for (int i = 0; i < N_DBLOCKS; i++){
 		if (remaining <= 0 || to_copy <= 0)
