@@ -125,6 +125,9 @@ char **parse(char* command){
 
 }
 
+
+
+
 int execute(char **tokens){
 	/* returns 0 on success */
 
@@ -184,6 +187,14 @@ int parse_special_cmds(char **tokens){
 			f_read(fd, 4, buffer);
 			printf("%d==%s\n", fd, (char*)buffer);
 		}
+
+
+	} else if (strcmp(tokens[0], "ls") == 0){
+		/* call ls here */
+		if(strcmp(token[1], "-l") || strcmp(token[1], "-F")){
+		ls_exe(1, token[1], token[2]);
+	} else {
+		ls_exe(0, NULL, token[1]);
 	}
 
 
@@ -197,3 +208,29 @@ int parse_special_cmds(char **tokens){
 
 
 
+int ls_exe(int isflag, char* flag, char* folder){
+	/* executes ls  */
+	FILE* f;
+	if(isflag){
+		if(flag == "-l"){
+
+		} else if(flag == "-F"){
+
+		}  else{
+
+		}
+	} else{
+		f = f_open(folder, "r");
+		dentry* temp = f_readdir(f);
+		while(temp != NULL){
+			printf("%d\n", temp->n);
+			rintf("%d\n", temp->n);
+			temp = f_readdir(f); //update the temp until we reach NULL
+		}
+		if(temp == NULL){
+			return 1; //check if 0 or 1
+		} else{
+			return -1;
+		}
+	}	
+}
