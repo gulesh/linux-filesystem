@@ -15,6 +15,8 @@
 #define MAX_LINE 1024
 #define MAX_TOKEN 128
 
+#define MAXMORENEWLINE 3
+
 void loop();
 char *read_command();
 char **parse(char*);
@@ -178,6 +180,7 @@ int parse_special_cmds(char **tokens){
 
 
 	if (strcmp(tokens[0], "cat") == 0){
+		/* cat is here */
 		
 		char * filename = tokens[1];
 		int fd, numread;
@@ -186,19 +189,50 @@ int parse_special_cmds(char **tokens){
 		fd = f_open(filename);
 		while (1){
 			numread = f_read(fd, 1, buffer);
-			if (numread != 1){
-				perror("f_read error\n");
-				return 0;
-			} else if (numread == 0){ 
-				return 0; 
+			if (numread == 0){ 
+				break;
 			}
-			printf("%d==%s\n", fd, (char*)buffer);
+
+			/* replace carriage returns with \n */
+			if (*(char*)buffer == '\r') *(char*)buffer='\n';
+
+			printf("%s", (char*)buffer);
 		}
+		printf("\n");
+		return 0;
+
+	} else if (strcmp(tokens[0], "more") == 0) {
+		/* more is here */
+
+		/* TODO make space or enter print more TODO */
+
+		char * filename = tokens[1];
+		int fd, numread, newlinecount;
+		void* buffer = malloc(4);
+
+		fd = f_open(filename);
+		while (1){
+			numread = f_read(fd, 1, buffer);
+			if (numread == 0){ 
+				break;
+			}
+
+			/* replace carriage returns with \n */
+			if (*(char*)buffer == '\r') *(char*)buffer='\n';
+
+			/* cutoff after a certain number of newlines */
+			if (*(char*)buffer == '\n') newlinecount ++;
+			if (newlinecount >= MAXMORENEWLINE-1) break;
+
+			printf("%s", (char*)buffer);
+		}
+		printf("\n");
 		return 0;
 
 
+
 	} else if (strcmp(tokens[0], "ls") == 0){
-		/* call ls here */
+		/* ls here */
 		if(strcmp(tokens[1], "-l")==0 || 
 				strcmp(tokens[1], "-F") == 0 ){
 			ls_exe(1, tokens[1], tokens[2]);
@@ -206,6 +240,14 @@ int parse_special_cmds(char **tokens){
 			ls_exe(0, NULL, tokens[1]);
 		}
 		return 0;
+
+
+
+	} else if (strcmp(tokens[0], "pwd") == 0){
+		/* pwd is here */
+
+
+
 	}
 
 	/* no special commands parsed */

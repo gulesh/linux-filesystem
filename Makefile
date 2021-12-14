@@ -1,12 +1,12 @@
+all: lib
+
 format: 
 	cc format.c util.h -o format.exec -I.
 fs:
 	cc fs.c util.h -o fs.exec -I.
 
-path:
-	export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:.
 
-lib: path
+lib:
 	gcc -Wall -fpic  -c fs.c util.h
 	gcc -o libfs.so fs.o -shared
 	gcc -o mysh mysh.c -L. -lfs
