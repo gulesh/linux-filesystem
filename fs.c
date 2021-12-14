@@ -12,18 +12,18 @@ int open_fd_table[FD_TABLE_SIZE][FD_MAX];
 inode_entry* inode_table[MAX_OPEN];
 
 /*helper functions*/
-int get_inode(char* , int );
-int get_block(int );
-int get_fd(int );
-void init_library(char * );
-void read_disk(char * );
-void free_and_exit();
-void print_open_fd();
-int add_to_inode_table(int );
-void print_open_inodes();
+static int get_inode(char* , int );
+static int get_block(int );
+static int get_fd(int );
+static void init_library(char * );
+static void read_disk(char * );
+static void free_and_exit();
+static void print_open_fd();
+static int add_to_inode_table(int );
+static void print_open_inodes();
 
 
-int main(){
+static int main(){
 	//char *filename = malloc(MAXLEN*MAXLEN);
 	//filename = "file.txt";
 	char filename[MAXLEN] = "usr/file.txt";
@@ -42,21 +42,21 @@ int main(){
 	return 0;
 }
 
-void print_open_fd(){
+static void print_open_fd(){
 	for (int i = 0; i<FD_TABLE_SIZE; i++){
 		printf("fd: %d\tinode: %d\tseek: %d\n", i, open_fd_table[i][FD_INODE], 
 		open_fd_table[i][FD_SEEK_POS]);
 	}
 }
 
-void print_open_inodes(){
+static void print_open_inodes(){
 	for (int i = 0; i< MAX_OPEN; i++){
 		printf("data block of node: %d\n", 
 		inode_table[i]->ptr->dblocks[0]);
 	}
 }
 /*returns the inode offset of the directory with name 'name' in datablock with offset 'o'*/
-int get_inode(char* name, int o){
+static int get_inode(char* name, int o){
 	printf("block of dir: %d\n", o);
 	dentry *temp = malloc(sizeof(dentry));
 	temp = (dentry *)(DATAOFFSET + o*BLOCKSIZE);
@@ -79,7 +79,7 @@ int get_inode(char* name, int o){
 	return -1;
 }
 
-int get_block(int n){
+static int get_block(int n){
 	printf("inode of dir: %d\n", n);
 	inode *temp_inode = malloc(sizeof(inode));
 	temp_inode = (inode *) (INODEOFFSET + n*(int)sizeof(inode));
@@ -88,7 +88,7 @@ int get_block(int n){
 	return block;
 }
 
-int get_fd(int n){
+static int get_fd(int n){
 	for (int i = 0; i< FD_TABLE_SIZE; i++){
 		if (open_fd_table[i][FD_INODE] == -1){
         	open_fd_table[i][FD_INODE] = n;
@@ -98,7 +98,7 @@ int get_fd(int n){
 	return -1;
 }
 
-int add_to_inode_table(int n){
+static int add_to_inode_table(int n){
 	for (int i = 0; i<MAX_OPEN; i++){
 		if (inode_table[i]->n == -1){
 			inode_table[i]->n = n;
@@ -110,7 +110,7 @@ int add_to_inode_table(int n){
 	return -1;
 }
 
-void init_library(char *d){
+static void init_library(char *d){
 	for (int i = 0; i< FD_TABLE_SIZE; i++){
 		open_fd_table[i][FD_INODE] = -1;
 		open_fd_table[i][FD_SEEK_POS] = 0;
@@ -124,7 +124,7 @@ void init_library(char *d){
 	
 }
 
-void read_disk(char *d){
+static void read_disk(char *d){
     FILE *fp = fopen(d, "r+");
     if (fp == NULL){
         printf("Disk doesn't exist, please use format.o to make a new one\n");
@@ -156,7 +156,7 @@ void read_disk(char *d){
     return;
 }
 
-void free_and_exit(){
+static void free_and_exit(){
     free(disk);
     printf("an error has occured. Exiting.\n");
     exit(EXIT_FAILURE);
@@ -217,7 +217,7 @@ int f_open(char * file){
 	inode from above, and seek position = 0; switch the tables row value to used.*/
 }
 
-inode *get_open_inode(int n){
+static inode *get_open_inode(int n){
     for (int i = 0; i<MAX_OPEN; i++){
         if (inode_table[i]->n == n){
             return inode_table[i]->ptr;
