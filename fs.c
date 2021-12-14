@@ -296,7 +296,7 @@ int f_read(int fd, int bytes, void* buffer){
 	/*read the required bytes and error if it violates the file size*/
 	/*put the bytes in buffer*/
 	/*return the number of bytes read*/
-	return 0;
+	return bytes-to_copy;
 }
 
 int f_opendir(char *dir){
