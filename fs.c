@@ -274,7 +274,7 @@ int f_read(int fd, int bytes, void* buffer){
 		if (remaining <= 0 || to_copy <= 0)
             break;
         if (N_DBLOCKS+i>=first_block){
-			int iblock = DATAOFFSET+file_inode->iblocks[i]*BLOCKSIZE;
+			void *iblock = DATAOFFSET+file_inode->iblocks[i]*BLOCKSIZE;
 			for (int j = 0; j < BLOCKSIZE; j+=4){
 				if (remaining <= 0 || to_copy <= 0)
             		break;
@@ -288,7 +288,7 @@ int f_read(int fd, int bytes, void* buffer){
 						copied = to_copy;
 					}
 					printf("copied: %d\n", copied);
-					memcpy(buffer_pos, DATAOFFSET+file_inode->dblocks[i]*BLOCKSIZE+offset, copied);
+					memcpy(buffer_pos, DATAOFFSET+inner*BLOCKSIZE+offset, copied);
 					buffer_pos+=copied;
 					to_copy-=copied;
 					remaining-=copied;
