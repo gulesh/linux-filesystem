@@ -57,19 +57,13 @@ static void print_open_inodes(){
 }
 /*returns the inode offset of the directory with name 'name' in datablock with offset 'o'*/
 static int get_inode(char* name, int o){
-	printf("block of dir: %d\n", o);
 	dentry *temp = malloc(sizeof(dentry));
 	temp = (dentry *)(DATAOFFSET + o*BLOCKSIZE);
 	int len = strlen(name);
-	printf("len: %d; name: %s\n", len, name);
 	do{
-		printf("temp->n: %d\n", temp->n);
 		void *temp_name = malloc(temp->length);
 		temp_name = (void *)temp + sizeof(dentry);
-		printf("temp_name: %s; temp->size: %d\n", (char *)temp_name, temp->size);
 		if (strcmp(name, temp_name) == 0){
-			printf("WELL.. temp->n to be returned is %d\n", temp->n);
-
 			return temp->n;
 		}
 		if (temp->last == 1)
@@ -80,7 +74,6 @@ static int get_inode(char* name, int o){
 }
 
 static int get_block(int n){
-	printf("inode of dir: %d\n", n);
 	inode *temp_inode = malloc(sizeof(inode));
 	temp_inode = (inode *) (INODEOFFSET + n*(int)sizeof(inode));
 	int block = temp_inode->dblocks[0];
@@ -168,7 +161,6 @@ int f_open(char * file){
 		init_flag = 1;
 	}
 	char *token = strtok(file, DELIM);
-	printf("here\n");
 	char tokens[MAXLEN][MAXLEN];
 	int idx = 0;
 	// loop through the string to extract all other tokens
@@ -178,11 +170,6 @@ int f_open(char * file){
 		idx++;
       	token = strtok(NULL, DELIM);
    	}
-	// Print the list of tokens
-    printf("Token List:\n");
-    for (int i=0; i < idx; i++) {
-        printf("%s\n", tokens[i]);
-    }
 	/*current data offset (that of root)*/
 	int curr_d = 0;
 	/*current inode offset (that of node)*/
@@ -193,11 +180,9 @@ int f_open(char * file){
 			printf("%s: No such file or directory\n", file);
 			exit(EXIT_FAILURE);
 		}
-		printf("curr_i is actually: %d\n", curr_i);
 		curr_d = get_block(curr_i);
 		if(curr_d == -1)
 			exit(EXIT_FAILURE);
-		printf("curr_d is actually: %d\n", curr_d);
 	}
 	int f_inode = get_inode(tokens[idx-1], curr_d);
 	int fd = get_fd(f_inode);
@@ -240,8 +225,6 @@ int f_read(int fd, int bytes, void* buffer){
 
 	/*copy direct data blocks, if any*/
 	for (int i = 0; i < N_DBLOCKS; i++){
-		printf("i: %d\n", i);
-		printf("to_copy: %d\n", to_copy);
 		if (remaining <= 0 || to_copy <= 0)
 			break;
 		if (i>=first_block){
@@ -252,7 +235,6 @@ int f_read(int fd, int bytes, void* buffer){
 			else{
 				copied = to_copy;
 			}
-			printf("copied: %d\n", copied);
 			memcpy(buffer_pos, DATAOFFSET+file_inode->dblocks[i]*BLOCKSIZE+offset, copied);
 			buffer_pos+=copied;
 			to_copy-=copied;
@@ -277,7 +259,6 @@ int f_read(int fd, int bytes, void* buffer){
 					else{
 						copied = to_copy;
 					}
-					printf("copied: %d\n", copied);
 					memcpy(buffer_pos, DATAOFFSET+inner*BLOCKSIZE+offset, copied);
 					buffer_pos+=copied;
 					to_copy-=copied;
@@ -316,18 +297,3 @@ dentry *f_readdir(int fd){
 	open_fd_table[fd][FD_SEEK_POS] = seek_pos + temp->size;
 	return temp;
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
