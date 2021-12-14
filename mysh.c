@@ -24,7 +24,6 @@ int parse_special_cmds(char **);
 int ls_exe(int , char* , char* );
 
 int main(int argc, char *argv[]){
-	printf("vim\n");
 	for(int i=0; i<= _NSIG; i++){
 		signal(i, sig_handler);
 	}
@@ -172,7 +171,8 @@ int execute(char **tokens){
 }
 
 int parse_special_cmds(char **tokens){
-	/* returns 0 on success */
+	/* returns 0 if a special token is found */
+	/* 1 if not */
 	
 	/* parses ls chmod cat ... */
 
@@ -180,14 +180,21 @@ int parse_special_cmds(char **tokens){
 	if (strcmp(tokens[0], "cat") == 0){
 		
 		char * filename = tokens[1];
-		int fd;
+		int fd, numread;
 		void* buffer = malloc(4);
 
 		fd = f_open(filename);
-		for (int i=0;i<5;i++){
-			f_read(fd, 4, buffer);
+		while (1){
+			numread = f_read(fd, 1, buffer);
+			if (numread != 1){
+				perror("f_read error\n");
+				return 0;
+			} else if (numread == 0){ 
+				return 0; 
+			}
 			printf("%d==%s\n", fd, (char*)buffer);
 		}
+		return 0;
 
 
 	} else if (strcmp(tokens[0], "ls") == 0){
@@ -198,9 +205,12 @@ int parse_special_cmds(char **tokens){
 		} else {
 			ls_exe(0, NULL, tokens[1]);
 		}
+		return 0;
 	}
 
-	return 0;
+	/* no special commands parsed */
+	return 1;
+
 }
 
 
