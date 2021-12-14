@@ -181,17 +181,17 @@ int f_open(char * file){
 		curr_i = get_inode(tokens[i], curr_d);
 		if(curr_i == -1){
 			printf("%s: No such file or directory\n", file);
-			exit(EXIT_FAILURE);
+			return -1;
 		}
 		curr_d = get_block(curr_i);
 		if(curr_d == -1)
-			exit(EXIT_FAILURE);
+			return -1;
 	}
 	int f_inode = get_inode(tokens[idx-1], curr_d);
 	int fd = get_fd(f_inode);
 	if (fd == -1){
 		printf("Open fd table is full\n");
-		exit(EXIT_FAILURE);
+		return -1;
 	}
 	/*Add the inode to the open inode table*/
 	int status = add_to_inode_table(f_inode);
