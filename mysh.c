@@ -177,11 +177,13 @@ int parse_special_cmds(char **tokens){
 		
 		char * filename = tokens[1];
 		int fd;
-		void* buffer = malloc(20);
+		void* buffer = malloc(4);
 
 		fd = f_open(filename);
-		f_read(fd, 20, buffer);
-		printf("%d==%s\n", fd, (char*)buffer);
+		for (int i=0;i<5;i++){
+			f_read(fd, 4, buffer);
+			printf("%d==%s\n", fd, (char*)buffer);
+		}
 	}
 
 
