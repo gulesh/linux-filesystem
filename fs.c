@@ -2,14 +2,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <stdint.h>
-#include "util.h"
-
-#define INODEOFFSET (void *)(disk + BLOCKSIZE + sb->inode_offset * BLOCKSIZE)
-#define DATAOFFSET  (void *)(disk + BLOCKSIZE + sb->data_offset  * BLOCKSIZE)
-
-#define DELIM "/"
-#define MAXLEN 50
-#define ROOT 0
+#include "fs.h"
 
 int init_flag = 0;
 int disksize;
@@ -17,9 +10,6 @@ superblock *sb;
 void *disk;
 int open_fd_table[FD_TABLE_SIZE][FD_MAX];
 inode_entry* inode_table[MAX_OPEN];
-
-int f_open(char *);
-int f_read(int, int, void*);
 
 /*helper functions*/
 int get_inode(char* , int );
