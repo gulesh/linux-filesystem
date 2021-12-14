@@ -3,7 +3,10 @@ format:
 fs:
 	cc fs.c util.h -o fs.exec -I.
 
-lib:
+path:
+	export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:.
+
+lib: path
 	gcc -Wall -fpic  -c fs.c util.h
 	gcc -o libfs.so fs.o -shared
 	gcc -o mysh mysh.c -L. -lfs

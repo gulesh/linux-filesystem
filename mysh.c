@@ -21,6 +21,7 @@ char **parse(char*);
 int execute(char**);
 void sig_handler(int);
 int parse_special_cmds(char **);
+int ls_exe(int , char* , char* );
 
 int main(int argc, char *argv[]){
 	printf("vim\n");
@@ -191,13 +192,13 @@ int parse_special_cmds(char **tokens){
 
 	} else if (strcmp(tokens[0], "ls") == 0){
 		/* call ls here */
-		if(strcmp(token[1], "-l") || strcmp(token[1], "-F")){
-		ls_exe(1, token[1], token[2]);
-	} else {
-		ls_exe(0, NULL, token[1]);
+		if(strcmp(tokens[1], "-l")==0 || 
+				strcmp(tokens[1], "-F") == 0 ){
+			ls_exe(1, tokens[1], tokens[2]);
+		} else {
+			ls_exe(0, NULL, tokens[1]);
+		}
 	}
-
-
 
 	return 0;
 }
@@ -210,27 +211,28 @@ int parse_special_cmds(char **tokens){
 
 int ls_exe(int isflag, char* flag, char* folder){
 	/* executes ls  */
-	FILE* f;
-	if(isflag){
+	int fd;
+	if(isflag == 1){
+		/* flags are supplied */
 		if(flag == "-l"){
 
-		} else if(flag == "-F"){
+		} else if (flag == "-F"){
 
-		}  else{
+		}  else {
 
 		}
-	} else{
-		f = f_open(folder, "r");
-		dentry* temp = f_readdir(f);
+	} else {
+		/* no flags are supplied */
+		fd = f_open(folder);
+		dentry* temp = f_readdir(fd);
 		while(temp != NULL){
 			printf("%d\n", temp->n);
-			rintf("%d\n", temp->n);
-			temp = f_readdir(f); //update the temp until we reach NULL
-		}
-		if(temp == NULL){
-			return 1; //check if 0 or 1
-		} else{
-			return -1;
+			printf("%d\n", temp->type);
+			temp = f_readdir(fd); //update the temp until we reach NULL
 		}
 	}	
+	return 0;
 }
+
+
+
