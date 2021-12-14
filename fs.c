@@ -30,6 +30,7 @@ void read_disk(char * );
 void free_and_exit();
 void print_open_fd();
 int add_to_inode_table(int );
+void print_open_inodes();
 
 
 int main(){
@@ -42,6 +43,12 @@ int main(){
 	printf("fd: %d\n",fd);
 	printf("fd2: %d\n",fd2);
 	print_open_fd();
+	print_open_inodes();
+	/*Testing f_read*/
+	int to_read = 80;
+	void *buf = malloc(to_read);
+	f_read(fd,to_read,buf);
+	printf("%s\n", (char*) buf);
 	return 0;
 }
 
@@ -53,7 +60,10 @@ void print_open_fd(){
 }
 
 void print_open_inodes(){
-	for (int i = 0; i< MAX_)
+	for (int i = 0; i< MAX_OPEN; i++){
+		printf("data block of node: %d\n", 
+		inode_table[i]->ptr->dblocks[0]);
+	}
 }
 /*returns the inode offset of the directory with name 'name' in datablock with offset 'o'*/
 int get_inode(char* name, int o){
@@ -217,7 +227,79 @@ int f_open(char * file){
 	inode from above, and seek position = 0; switch the tables row value to used.*/
 }
 
+inode *get_open_inode(int n){
+    for (int i = 0; i<MAX_OPEN; i++){
+        if (inode_table[i]->n == n){
+            return inode_table[i]->ptr;
+        }
+    }
+    return NULL;
+}
+
 int f_read(int fd, int bytes, void* buffer){
+	int n = open_fd_table[fd][FD_INODE];
+	int seek_pos   = open_fd_table[fd][FD_SEEK_POS];
+	int first_block = (int)(seek_pos/BLOCKSIZE);
+	int offset = seek_pos - first_block*BLOCKSIZE;
+	int to_copy = bytes;
+
+	inode *file_inode = get_open_inode(n);
+	void *buffer_pos = buffer;
+
+	int remaining = file_inode->size;
+
+	/*copy direct data blocks, if any*/
+	for (int i = 0; i < N_DBLOCKS; i++){
+		printf("i: %d\n", i);
+		printf("to_copy: %d\n", to_copy);
+		if (remaining <= 0 || to_copy <= 0)
+			break;
+		if (i>=first_block){
+			int copied;
+			if (to_copy >= BLOCKSIZE-offset){
+				copied = BLOCKSIZE-offset;
+			}
+			else{
+				copied = to_copy;
+			}
+			printf("copied: %d\n", copied);
+			memcpy(buffer_pos, DATAOFFSET+file_inode->dblocks[i]*BLOCKSIZE+offset, copied);
+			buffer_pos+=copied;
+			to_copy-=copied;
+			remaining-=copied;
+			offset = 0;
+		}
+	}
+	for (int i = 0; i<N_IBLOCKS; i++){
+		if (remaining <= 0 || to_copy <= 0)
+            break;
+        if (N_DBLOCKS+i>=first_block){
+			int iblock = DATAOFFSET+file_inode->iblocks[i]*BLOCKSIZE;
+			for (int j = 0; j < BLOCKSIZE; j+=4){
+				if (remaining <= 0 || to_copy <= 0)
+            		break;
+				if (N_DBLOCKS + i*(j/4*BLOCKSIZE)>=first_block){	
+					int inner = *((int *) iblock+j);
+					int copied;
+					if (to_copy >= BLOCKSIZE-offset){
+						copied = BLOCKSIZE-offset;
+					}
+					else{
+						copied = to_copy;
+					}
+					printf("copied: %d\n", copied);
+					memcpy(buffer_pos, DATAOFFSET+file_inode->dblocks[i]*BLOCKSIZE+offset, copied);
+					buffer_pos+=copied;
+					to_copy-=copied;
+					remaining-=copied;
+					offset = 0;
+				}
+
+
+			}
+		}
+	}
+
 	/*get inode from table using fd*/
 	/*got to data block and seek to position from table*/
 	/*read the required bytes and error if it violates the file size*/
