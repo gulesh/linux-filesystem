@@ -23,7 +23,7 @@ static int add_to_inode_table(int );
 static void print_open_inodes();
 
 
-static int main(){
+/*static int main(){
 	//char *filename = malloc(MAXLEN*MAXLEN);
 	//filename = "file.txt";
 	char filename[MAXLEN] = "usr/file.txt";
@@ -34,13 +34,13 @@ static int main(){
 	printf("fd2: %d\n",fd2);
 	print_open_fd();
 	print_open_inodes();
-	/*Testing f_read*/
+	//Testing f_read
 	int to_read = 80;
 	void *buf = malloc(to_read);
 	f_read(fd,to_read,buf);
 	printf("%s\n", (char*) buf);
 	return 0;
-}
+}*/
 
 static void print_open_fd(){
 	for (int i = 0; i<FD_TABLE_SIZE; i++){
@@ -303,10 +303,10 @@ int f_opendir(char *dir){
 	return f_open(dir);
 }
 
-int f_readdir(int fd){
+dentry *f_readdir(int fd){
 	int n = open_fd_table[fd][FD_INODE];
     int seek_pos = open_fd_table[fd][FD_SEEK_POS];
-	node *dir_inode = get_open_inode(n);
+	inode *dir_inode = get_open_inode(n);
 	
 	if (seek_pos >= dir_inode->size)
 		return NULL;
