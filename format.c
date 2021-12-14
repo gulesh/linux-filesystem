@@ -218,11 +218,20 @@ void create_new(int size){
     free(buffer);
 
 	/*filling file.txt with content*/
-	char *content = "This is a test file.";
+	char *content = malloc(20);
+	strcpy(content, "This is a test file.");
 	if (fseek(disk, DATAOFFSET + BLOCKSIZE, SEEK_SET) == -1){
         free_and_exit();
     }
-	for (int i = 0; i<4; i++){
+	for (int i = 0; i<2; i++){
+		if (fwrite(content, 1, strlen(content), disk) != strlen(content))
+        	free_and_exit();
+	}
+	printf("A7a: %c\n", content[3]);
+	content[4]  = '\n';
+	printf("A7a: %c\n", content[3]);
+	content[7] = '\n';
+	for (int i = 0; i<2; i++){
 		if (fwrite(content, 1, strlen(content), disk) != strlen(content))
         	free_and_exit();
 	}
