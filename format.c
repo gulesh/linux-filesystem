@@ -128,7 +128,7 @@ void create_new(int size){
 	if (fseek(disk, DATAOFFSET, SEEK_SET) == -1){
         free_and_exit();
     }
-	void *filename = "~";
+	void *filename = "/";
 
 	printf("ftell: %ld\n", ftell(disk));
 
