@@ -10,8 +10,7 @@ superblock *sb;
 void *disk;
 int open_fd_table[FD_TABLE_SIZE][FD_MAX];
 inode_entry* inode_table[MAX_OPEN];
-char *pwd = malloc(MAXLEN*MAXLEN);
-strcpy(pwd, "/");
+char *pwd;
 
 /*helper functions*/
 static int get_inode(char* , int );
@@ -106,6 +105,8 @@ static int add_to_inode_table(int n){
 }
 
 static void init_library(char *d){
+	char *pwd = malloc(MAXLEN*MAXLEN);
+	strcpy(pwd, "/");
 	for (int i = 0; i< FD_TABLE_SIZE; i++){
 		open_fd_table[i][FD_INODE] = -1;
 		open_fd_table[i][FD_SEEK_POS] = 0;
