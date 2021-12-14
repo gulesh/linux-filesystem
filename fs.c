@@ -105,7 +105,7 @@ static int add_to_inode_table(int n){
 }
 
 static void init_library(char *d){
-	pwd = malloc(MAXLEN*MAXLEN);
+	pwd = malloc(MAX_LEN*MAX_LEN);
 	strcpy(pwd, "/");
 	for (int i = 0; i< FD_TABLE_SIZE; i++){
 		open_fd_table[i][FD_INODE] = -1;

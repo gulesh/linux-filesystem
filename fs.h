@@ -8,7 +8,7 @@
 #define DATAOFFSET  (void *)(disk + BLOCKSIZE + sb->data_offset  * BLOCKSIZE)
 
 #define DELIM "/"
-#define MAXLEN 50
+#define MAX_LEN 50
 #define ROOT 0
 
 extern char *pwd;
