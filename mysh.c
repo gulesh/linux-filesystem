@@ -9,6 +9,8 @@
 #include <sys/wait.h>
 #include <util.h>
 
+#include "fs.h"
+
 #define PROMPT "(|): "
 #define DELIMITERS " \t\r\n\v\f"
 #define MAX_LINE 1024
@@ -19,8 +21,10 @@ char *read_command();
 char **parse(char*);
 int execute(char**);
 void sig_handler(int);
+int parse_special_cmds(char **);
 
 int main(int argc, char *argv[]){
+	printf("vim\n");
 	for(int i=0; i<= _NSIG; i++){
 		signal(i, sig_handler);
 	}
@@ -34,7 +38,6 @@ void sig_handler(int sig){
 		exit(1);
 		}
 
-
 		else{
 		/* Not sure if we have to handle all signals a certain way, but
 		 * for now any signal will not affect the shell and thus it will
@@ -47,9 +50,9 @@ void sig_handler(int sig){
 void loop(){
 	char *command;
 	char **tokens;
-	int status = 1;
+	int status = 0;
 
-	while (status) {
+	while (!status) {
 		/* print prompt */
 		write(STDOUT_FILENO, PROMPT ,6);
 		/* tiny sleep to help printing delays */
@@ -58,7 +61,7 @@ void loop(){
 		/* read and handle command */
 		command = read_command();
 		tokens = parse(command); 
-		status = execute(tokens);
+		status = execute(tokens); // returns 0 on success
 		free(command);
 		free(tokens);
 	}
@@ -141,13 +144,18 @@ int ls_exe(int isflag, char* flag, char* folder){
 	
 }
 int execute(char **tokens){
-	/* if user just presses enter */
+	/* returns 0 on success */
+
+	/* if enter is pressed */
 	if (tokens[0] == NULL){
-		return 1;
+		return 0;
 	}
 	/* handles exit */
 	else if (strcmp(tokens[0], "exit") == 0){
-		return 0;	
+		return 1;	
+	}
+	else if (parse_special_cmds(tokens) == 0) {
+		return 0;
 	}
 	else if (strcmp(tokens[0], "ls") == 0){
 		/* call ls here */
@@ -176,7 +184,36 @@ int execute(char **tokens){
 		else{
 			printf("Error Forking!\n");
 		}
-		return 1;
+		return 0;
 	}
 	
 }
+
+int parse_special_cmds(char **tokens){
+	/* returns 0 on success */
+	
+	/* parses ls chmod cat ... */
+
+
+	if (strcmp(tokens[0], "cat") == 0){
+		
+		char * filename = tokens[1];
+		int fd;
+		void* buffer = malloc(20);
+
+		fd = f_open(filename);
+		f_read(fd, 20, buffer);
+		printf("%d==%s\n", fd, (char*)buffer);
+	}
+
+
+
+	return 0;
+}
+
+
+
+
+
+
+

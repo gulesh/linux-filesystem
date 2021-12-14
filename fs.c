@@ -289,7 +289,8 @@ int f_read(int fd, int bytes, void* buffer){
 			}
 		}
 	}
-
+	open_fd_table[fd][FD_SEEK_POS] = seek_pos + bytes;
+	
 	/*get inode from table using fd*/
 	/*got to data block and seek to position from table*/
 	/*read the required bytes and error if it violates the file size*/
@@ -297,3 +298,36 @@ int f_read(int fd, int bytes, void* buffer){
 	/*return the number of bytes read*/
 	return 0;
 }
+
+int f_opendir(char *dir){
+	return f_open(dir);
+}
+
+int f_readdir(int fd){
+	int n = open_fd_table[fd][FD_INODE];
+    int seek_pos = open_fd_table[fd][FD_SEEK_POS];
+	node *dir_inode = get_open_inode(n);
+	
+	if (seek_pos >= dir_inode->size)
+		return NULL;
+
+	dentry *temp; //malloc?
+    temp = (dentry *)(DATAOFFSET + dir_inode->dblocks[0]*BLOCKSIZE + seek_pos);
+	open_fd_table[fd][FD_SEEK_POS] = seek_pos + temp->size;
+	return temp;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
