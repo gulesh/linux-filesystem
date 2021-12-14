@@ -1,7 +1,16 @@
 format: 
-	cc format.c util.h -o format.o -I.
+	cc format.c util.h -o format.exec -I.
 fs:
-	cc fs.c util.h -o fs.o -I.
+	cc fs.c util.h -o fs.exec -I.
+
+lib:
+	gcc -Wall -fpic  -c fs.c util.h
+	gcc -o libfs.so fs.o -shared
+	gcc -o mysh mysh.c -L. -lfs
+
+
+b: mysh.c fs.c util.h
+	cc fs.h mysh.c  util.h -o bb -I.
 
 ebash:
 	gcc -c -o linkedlist.o linkedlist.c -I.
