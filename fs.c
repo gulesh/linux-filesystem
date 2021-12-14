@@ -10,7 +10,7 @@ superblock *sb;
 void *disk;
 int open_fd_table[FD_TABLE_SIZE][FD_MAX];
 inode_entry* inode_table[MAX_OPEN];
-pwd = "~";
+//pwd = "~";
 
 /*helper functions*/
 static int get_inode(char* , int );
