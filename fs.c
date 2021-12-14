@@ -10,6 +10,7 @@ superblock *sb;
 void *disk;
 int open_fd_table[FD_TABLE_SIZE][FD_MAX];
 inode_entry* inode_table[MAX_OPEN];
+pwd = "~";
 
 /*helper functions*/
 static int get_inode(char* , int );
@@ -165,7 +166,7 @@ int f_open(char * file){
 	int idx = 0;
 	// loop through the string to extract all other tokens
    	while( token != NULL ) {
-      	printf( " %s\n", token ); //printing each token
+      	//printf( " %s\n", token ); //printing each token
 		strcpy(tokens[idx], token);
 		idx++;
       	token = strtok(NULL, DELIM);
