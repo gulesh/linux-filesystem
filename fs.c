@@ -164,7 +164,7 @@ int f_open(char * file){
 		init_flag = 1;
 	}
 	char *token = strtok(file, DELIM);
-	char tokens[MAXLEN][MAXLEN];
+	char tokens[MAX_LEN][MAX_LEN];
 	int idx = 0;
 	// loop through the string to extract all other tokens
    	while( token != NULL ) {
