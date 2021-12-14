@@ -7,6 +7,7 @@
 #include <ctype.h>
 #include <sys/types.h>      
 #include <sys/wait.h>
+#include <util.h>
 
 #define PROMPT "(|): "
 #define DELIMITERS " \t\r\n\v\f"
@@ -121,7 +122,24 @@ char **parse(char* command){
 	return tbuf;
 
 }
+int ls_exe(int isflag, char* flag, char* folder){
+	FILE* f;
+	if(isflag){
+		if(flag == "l"){
 
+		} else if(flag == "F"){
+
+		} else{
+			f = f_open(folder, "r");
+			dentry* temp = f_readdir();
+			while(temp != NULL){
+				printf("%d\n", temp->n);
+				rintf("%d\n", temp->n);
+			}
+		}
+	}
+	
+}
 int execute(char **tokens){
 	/* if user just presses enter */
 	if (tokens[0] == NULL){
@@ -130,6 +148,10 @@ int execute(char **tokens){
 	/* handles exit */
 	else if (strcmp(tokens[0], "exit") == 0){
 		return 0;	
+	}
+	else if (strcmp(tokens[0], "ls") == 0){
+		/* call ls here */
+
 	}
 	else{
 		int status;
