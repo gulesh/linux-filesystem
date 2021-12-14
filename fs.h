@@ -10,6 +10,9 @@
 #define DELIM "/"
 #define MAXLEN 50
 #define ROOT 0
+
+extern char *pwd = malloc(MAXLEN*MAXLEN);
+
 int f_open(char * );
 int f_read(int, int, void* );
 int f_opendir(char * );
