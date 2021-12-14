@@ -188,6 +188,10 @@ int f_open(char * file){
 			return -1;
 	}
 	int f_inode = get_inode(tokens[idx-1], curr_d);
+	if(f_inode == -1){
+        printf("%s: No such file or directory\n", file);
+        return -1;
+	}
 	int fd = get_fd(f_inode);
 	if (fd == -1){
 		printf("Open fd table is full\n");
