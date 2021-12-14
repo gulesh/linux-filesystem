@@ -24,6 +24,7 @@ int execute(char**);
 void sig_handler(int);
 int parse_special_cmds(char **);
 int ls_exe(int , char* , char* );
+void pwdinit();
 
 int main(int argc, char *argv[]){
 	for(int i=0; i<= _NSIG; i++){
@@ -35,8 +36,8 @@ int main(int argc, char *argv[]){
 
 void sig_handler(int sig){
 	if(0){
-		if(sig == SIGTERM){
-		exit(1);
+		if(sig == SIGINT){
+			exit(1);
 		}
 
 		else{
@@ -53,6 +54,7 @@ void loop(){
 	char **tokens;
 	int status = 0;
 
+	pwdinit();
 	while (!status) {
 		/* print prompt */
 		write(STDOUT_FILENO, PROMPT ,6);
@@ -245,16 +247,66 @@ int parse_special_cmds(char **tokens){
 
 	} else if (strcmp(tokens[0], "pwd") == 0){
 		/* pwd is here */
+		
+		printf("%s\n", pwd);
+		return 0;
 
 
 
+	} else if (strcmp(tokens[0], "cd") == 0){
+		/* cd is here */
+
+		/* store pwd in case invalid path is supplied */
+		char* temp = malloc(MAX_LEN*MAX_LEN);	
+		strcpy(temp, pwd);
+
+		if (!tokens[1]){
+			/* change to root directory if no path specified */
+			strcpy(temp, "/");
+		} else if (!strcmp(tokens[1],".")) {
+			/* stay in the same directory */
+		} else {
+			if (tokens[1][0] == '/'){
+				/* absolute path specified */
+				strcpy(temp, tokens[1]);
+				if (f_opendir(temp) == -1){
+					/* invalid path */
+					return 0;	
+				}
+			} else {
+					printf("invalid\n");
+					printf("invalid\n");
+				/* relative path specified */
+				strcat(temp, tokens[1]);
+				printf("Temp: %s\n", temp);
+				int status = f_opendir(temp);
+				printf("STATUS: %d\n",status);
+				if (status == -1){
+					/* invalid path */
+					printf("invalid\n");
+					return 0;	
+				}
+			}
+		strcat(temp, "/");
+		strcpy(pwd,temp);
+		printf("Temp: %s\n", temp);
+		printf("PWD: %s\n", pwd);
+
+		}
+		
+		return 0;
 	}
+
 
 	/* no special commands parsed */
 	return 1;
 
 }
 
+void pwdinit (){
+	f_opendir("/");
+
+}
 
 
 
