@@ -14,6 +14,8 @@
 #define DELIMITERS " \t\r\n\v\f"
 #define MAX_LINE 1024
 #define MAX_TOKEN 128
+#define GREEN   "\x1b[32m"
+#define RESET   "\x1b[0m"
 
 #define MAXMORENEWLINE 3
 
@@ -24,18 +26,21 @@ int execute(char**);
 void sig_handler(int);
 int parse_special_cmds(char **);
 int ls_exe(int , char* , char* );
-void pwdinit();
+
+int pwd_fd = 0; 
 
 int main(int argc, char *argv[]){
 	for(int i=0; i<= _NSIG; i++){
 		signal(i, sig_handler);
 	}
+	init_library("DISK");
 	loop();
 	return 0;
 }
 
 void sig_handler(int sig){
-	if(0){
+	/*change to 1 for easy exit*/
+	if(1){
 		if(sig == SIGINT){
 			exit(1);
 		}
@@ -54,7 +59,6 @@ void loop(){
 	char **tokens;
 	int status = 0;
 
-	pwdinit();
 	while (!status) {
 		/* print prompt */
 		write(STDOUT_FILENO, PROMPT ,6);
@@ -233,12 +237,18 @@ int parse_special_cmds(char **tokens){
 
 
 
-	} else if (strcmp(tokens[0], "ls") == 0){
+	} 
+	else if (strcmp(tokens[0], "ls") == 0){
 		/* ls here */
-		if(strcmp(tokens[1], "-l")==0 || 
+		if (tokens[1] == NULL){
+			ls_exe(0,NULL,NULL);
+		}
+
+		else if(strcmp(tokens[1], "-l")==0 || 
 				strcmp(tokens[1], "-F") == 0 ){
 			ls_exe(1, tokens[1], tokens[2]);
-		} else {
+		} 
+		else{
 			ls_exe(0, NULL, tokens[1]);
 		}
 		return 0;
@@ -263,23 +273,26 @@ int parse_special_cmds(char **tokens){
 		if (!tokens[1]){
 			/* change to root directory if no path specified */
 			strcpy(temp, "/");
-		} else if (!strcmp(tokens[1],".")) {
+		} 
+		else if (!strcmp(tokens[1],".")) {
 			/* stay in the same directory */
-		} else {
+		} 
+		else {
 			if (tokens[1][0] == '/'){
 				/* absolute path specified */
 				strcpy(temp, tokens[1]);
-				if (f_opendir(temp) == -1){
+				int fd = f_opendir(temp);
+				if (fd == -1){
 					/* invalid path */
-					return 0;	
+					return 0;
 				}
-			} else {
-					printf("invalid\n");
-					printf("invalid\n");
+			}
+			else {
 				/* relative path specified */
 				strcat(temp, tokens[1]);
 				printf("Temp: %s\n", temp);
 				int status = f_opendir(temp);
+				pwd_fd = status;
 				printf("STATUS: %d\n",status);
 				if (status == -1){
 					/* invalid path */
@@ -295,6 +308,9 @@ int parse_special_cmds(char **tokens){
 		}
 		
 		return 0;
+	} 
+	else if (strcmp(tokens[0], "mkdir") == 0){
+		f_mkdir(tokens[1]);
 	}
 
 
@@ -303,19 +319,11 @@ int parse_special_cmds(char **tokens){
 
 }
 
-void pwdinit (){
-	f_opendir("/");
-
-}
-
-
-
-
 
 
 int ls_exe(int isflag, char* flag, char* folder){
 	/* executes ls  */
-	int fd;
+	int fd = pwd_fd;
 	if(isflag == 1){
 		/* flags are supplied */
 		if(flag == "-l"){
@@ -326,17 +334,29 @@ int ls_exe(int isflag, char* flag, char* folder){
 
 		}
 	} else {
+		if (folder != NULL){
+			fd = f_opendir(folder);
+			pwd_fd = fd;
+		}
 		/* no flags are supplied */
-		fd = f_open(folder);
-		dentry* temp = f_readdir(fd);
+		dentry* temp = malloc(sizeof(dentry));
+		temp = f_readdir(pwd_fd);
+		int count = 1;
 		while(temp != NULL){
-			printf("%d\n", temp->n);
-			printf("%d\n", temp->type);
+			char *name = malloc(temp->length);
+			name =(char *)((void*)temp+sizeof(dentry));
+			if (temp->type == DIRECTORY || temp->type == MNT_PNT)
+				printf("%s%s%s\t",GREEN, name, RESET);
+			else
+				printf("%s\t",name);
+			if (count %4 == 0)
+				printf("\n");
+			count+=1;	
 			temp = f_readdir(fd); //update the temp until we reach NULL
 		}
+		if ((count-1) % 4 != 0)
+			printf("\n");
 	}	
 	return 0;
 }
-
-
 

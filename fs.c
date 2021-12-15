@@ -10,13 +10,14 @@ superblock *sb;
 void *disk;
 int open_fd_table[FD_TABLE_SIZE][FD_MAX];
 inode_entry* inode_table[MAX_OPEN];
+/*inode number of working directory*/
+int working_dir;
 char *pwd;
 
 /*helper functions*/
 static int get_inode(char* , int );
 static int get_block(int );
 static int get_fd(int );
-static void init_library(char * );
 static void read_disk(char * );
 static void free_and_exit();
 static void print_open_fd();
@@ -104,19 +105,32 @@ static int add_to_inode_table(int n){
 	return -1;
 }
 
-static void init_library(char *d){
+void init_library(char *d){
+	working_dir = 0;
 	pwd = malloc(MAX_LEN*MAX_LEN);
 	strcpy(pwd, "/");
-	for (int i = 0; i< FD_TABLE_SIZE; i++){
+	open_fd_table[0][FD_INODE] = 0;
+	open_fd_table[0][FD_SEEK_POS] = 0;
+	for (int i = 1; i< FD_TABLE_SIZE; i++){
 		open_fd_table[i][FD_INODE] = -1;
 		open_fd_table[i][FD_SEEK_POS] = 0;
 	}
-	for (int i = 0; i<MAX_OPEN; i++){
+	read_disk(d);
+	inode_table[0] = malloc(sizeof(inode_entry));
+    inode_table[0]->n = 0;
+    inode_table[0]->ptr = malloc(sizeof(inode));
+	memcpy(inode_table[0]->ptr, INODEOFFSET, sizeof(inode));
+	for (int i = 1; i<MAX_OPEN; i++){
 		inode_table[i] = malloc(sizeof(inode_entry));
 		inode_table[i]->n = -1;
 		inode_table[i]->ptr = malloc(sizeof(inode));
 	}
-	read_disk(d);
+	/*inode_entry *home_entry = inode_table[0];
+	home_entry->n = 0;
+	void *home_inode = (void*)(inode *) home_entry->ptr;
+	memcpy(home_inode, INODEOFFSET, sizeof(inode));
+	inode *test = (inode *)home_inode;
+	printf("test: %d\n",test->size);*/
 	
 }
 
@@ -290,19 +304,89 @@ int f_read(int fd, int bytes, void* buffer){
 }
 
 int f_opendir(char *dir){
-	return f_open(dir);
+	int fd = f_open(dir);
+	working_dir = open_fd_table[fd][FD_INODE];
+	return fd;
 }
 
 dentry *f_readdir(int fd){
 	int n = open_fd_table[fd][FD_INODE];
     int seek_pos = open_fd_table[fd][FD_SEEK_POS];
 	inode *dir_inode = get_open_inode(n);
-	
-	if (seek_pos >= dir_inode->size)
+	if (dir_inode->type == REGULAR){
+		printf("Not a directory\n");
 		return NULL;
+	}
+	
+	if (seek_pos >= dir_inode->size){
+		open_fd_table[fd][FD_SEEK_POS] = 0;
+		return NULL;
+	}
 
 	dentry *temp; //malloc?
     temp = (dentry *)(DATAOFFSET + dir_inode->dblocks[0]*BLOCKSIZE + seek_pos);
 	open_fd_table[fd][FD_SEEK_POS] = seek_pos + temp->size;
 	return temp;
 }
+
+int f_mkdir(char *name){
+	inode *cur = get_open_inode(working_dir);
+	int block = cur->dblocks[0];
+	/*inode for new dir*/
+	inode *new_inode = (inode *) INODEOFFSET + sb->free_inode*BLOCKSIZE;
+	sb->free_inode += new_inode->next_inode;
+	new_inode->type = DIRECTORY;
+	new_inode->nlink = 1;
+	new_inode->dblocks[0] = sb->free_block;
+	sb->free_block = *((int*) DATAOFFSET + sb->free_block*BLOCKSIZE);
+	
+	/*dentry for new dir*/
+	dentry *new_dir = malloc(sizeof(dentry));
+	new_dir->n = sb->free_inode;
+	new_dir->length = strlen(name); 
+	new_dir->type = DIRECTORY;
+	new_dir->size = (int)sizeof(dentry) + new_dir->length;
+	new_dir->last = 1;
+
+	/*dentry for . of this dir*/
+	dentry *self = malloc(sizeof(dentry));
+	self->n = new_dir->n;
+	self->length = 8;
+	self->type = DIRECTORY;
+	self->size = (int)sizeof(dentry)+self->length;
+	self->last = 1;
+	new_inode->size+=self->size;
+
+	/*copy new_dir to the end of the block of the current directory*/
+	memcpy(DATAOFFSET+block*BLOCKSIZE+cur->size, (void *)new_dir, sizeof(dentry));
+	/*change last dentry before mkdir to have last = 0*/
+	dentry *temp = (dentry *)(DATAOFFSET + block*BLOCKSIZE);
+    do{
+        if (temp->last == 1){
+			temp->last = 0;
+            break;
+		}
+        temp = (dentry *)((void *)temp + temp->size);
+    }while(1);
+
+	cur->size += sizeof(dentry);
+
+	/*copy name of new dir*/
+	memcpy(DATAOFFSET+block*BLOCKSIZE+cur->size, (void*) name, strlen(name));
+	cur->size += strlen(name);
+
+	/*copy self into new_inode dblocks*/
+	memcpy(DATAOFFSET+new_inode->dblocks[0]*BLOCKSIZE, (void*) self, sizeof(dentry));
+	void *self_name = ".";
+	memcpy(DATAOFFSET+new_inode->dblocks[0]*BLOCKSIZE+sizeof(dentry), 
+	(void*) self_name, sizeof(self_name));
+
+	return 0;
+	//CHANGE LAST TO NOT LAST
+}
+
+
+
+
+
+
