@@ -147,6 +147,8 @@ int execute(char **tokens){
 	else if (strcmp(tokens[0], "exit") == 0){
 		return 1;	
 	}
+	/*When parse special returns -1 (normal fail), it still goes to else
+	statement. Reason for mkdir happening twice*/
 	else if (parse_special_cmds(tokens) == 0) {
 		return 0;
 	}
@@ -273,6 +275,7 @@ int parse_special_cmds(char **tokens){
 		if (!tokens[1]){
 			/* change to root directory if no path specified */
 			strcpy(temp, "/");
+			pwd_fd = 0;
 		} 
 		else if (!strcmp(tokens[1],".")) {
 			/* stay in the same directory */
@@ -290,18 +293,16 @@ int parse_special_cmds(char **tokens){
 			else {
 				/* relative path specified */
 				strcat(temp, tokens[1]);
-				printf("Temp: %s\n", temp);
 				int status = f_opendir(temp);
-				pwd_fd = status;
-				printf("STATUS: %d\n",status);
 				if (status == -1){
 					/* invalid path */
 					printf("invalid\n");
 					return 0;	
 				}
+				pwd_fd = status;
 			}
-		strcat(temp, "/");
-		strcpy(pwd,temp);
+		memcpy(temp + strlen(temp), "/", 1);
+		memcpy(pwd,temp, strlen(temp));
 		printf("Temp: %s\n", temp);
 		printf("PWD: %s\n", pwd);
 
@@ -309,8 +310,9 @@ int parse_special_cmds(char **tokens){
 		
 		return 0;
 	} 
-	else if (strcmp(tokens[0], "mkdir") == 0){
+	else if (strcmp(tokens[0], "mkdirr") == 0){
 		f_mkdir(tokens[1]);
+		return 0;
 	}
 
 

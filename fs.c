@@ -177,45 +177,51 @@ int f_open(char * file){
 		init_library("DISK");
 		init_flag = 1;
 	}
-	char *token = strtok(file, DELIM);
-	char tokens[MAX_LEN][MAX_LEN];
-	int idx = 0;
-	// loop through the string to extract all other tokens
-   	while( token != NULL ) {
-      	//printf( " %s\n", token ); //printing each token
-		strcpy(tokens[idx], token);
-		idx++;
-      	token = strtok(NULL, DELIM);
-   	}
-	/*current data offset (that of root)*/
-	int curr_d = 0;
-	/*current inode offset (that of node)*/
-	int curr_i;
-	for (int i = 0; i<idx-1; i++){
-		curr_i = get_inode(tokens[i], curr_d);
-		if(curr_i == -1){
+	if (strcmp(file, "/") == 0){
+		return 0;
+	}
+	else{
+
+		char *token = strtok(file, DELIM);
+		char tokens[MAX_LEN][MAX_LEN];
+		int idx = 0;
+		// loop through the string to extract all other tokens
+		while( token != NULL ) {
+			//printf( " %s\n", token ); //printing each token
+			strcpy(tokens[idx], token);
+			idx++;
+			token = strtok(NULL, DELIM);
+		}
+		/*current data offset (that of root)*/
+		int curr_d = 0;
+		/*current inode offset (that of node)*/
+		int curr_i;
+		for (int i = 0; i<idx-1; i++){
+			curr_i = get_inode(tokens[i], curr_d);
+			if(curr_i == -1){
+				printf("%s: No such file or directory\n", file);
+				return -1;
+			}
+			curr_d = get_block(curr_i);
+			if(curr_d == -1)
+				return -1;
+		}
+		int f_inode = get_inode(tokens[idx-1], curr_d);
+		if(f_inode == -1){
 			printf("%s: No such file or directory\n", file);
 			return -1;
 		}
-		curr_d = get_block(curr_i);
-		if(curr_d == -1)
+		int fd = get_fd(f_inode);
+		if (fd == -1){
+			printf("Open fd table is full\n");
 			return -1;
+		}
+		/*Add the inode to the open inode table*/
+		int status = add_to_inode_table(f_inode);
+		if (status == -1)
+			exit(EXIT_FAILURE);
+		return fd;
 	}
-	int f_inode = get_inode(tokens[idx-1], curr_d);
-	if(f_inode == -1){
-        printf("%s: No such file or directory\n", file);
-        return -1;
-	}
-	int fd = get_fd(f_inode);
-	if (fd == -1){
-		printf("Open fd table is full\n");
-		return -1;
-	}
-	/*Add the inode to the open inode table*/
-	int status = add_to_inode_table(f_inode);
-	if (status == -1)
-		exit(EXIT_FAILURE);
-	return fd;
 	/*search dentry based on name*/
 	/*retreive inode number*/
 	/*choose the lowest unused fd*/
@@ -333,16 +339,22 @@ int f_mkdir(char *name){
 	inode *cur = get_open_inode(working_dir);
 	int block = cur->dblocks[0];
 	/*inode for new dir*/
-	inode *new_inode = (inode *) INODEOFFSET + sb->free_inode*BLOCKSIZE;
-	sb->free_inode += new_inode->next_inode;
+	printf("free_inode: %d\n", sb->free_inode);
+	printf("free_block: %d\n", sb->free_block);
+	int f = sb->free_inode;
+	inode *new_inode = (inode *) (INODEOFFSET + sb->free_inode*(int)sizeof(inode));
+	printf("next: %d\n", new_inode->next_inode);
 	new_inode->type = DIRECTORY;
 	new_inode->nlink = 1;
 	new_inode->dblocks[0] = sb->free_block;
-	sb->free_block = *((int*) DATAOFFSET + sb->free_block*BLOCKSIZE);
+	sb->free_block = *(int*) (DATAOFFSET + sb->free_block*BLOCKSIZE);
+	printf("free_block: %d\n", sb->free_block);
 	
 	/*dentry for new dir*/
 	dentry *new_dir = malloc(sizeof(dentry));
 	new_dir->n = sb->free_inode;
+	sb->free_inode = new_inode->next_inode;
+	printf("free_inode: %d\n", sb->free_inode);
 	new_dir->length = strlen(name); 
 	new_dir->type = DIRECTORY;
 	new_dir->size = (int)sizeof(dentry) + new_dir->length;
@@ -369,11 +381,13 @@ int f_mkdir(char *name){
         temp = (dentry *)((void *)temp + temp->size);
     }while(1);
 
-	cur->size += sizeof(dentry);
+	dentry *test = (dentry*)(DATAOFFSET+block*BLOCKSIZE+cur->size);
 
+	cur->size += sizeof(dentry);
 	/*copy name of new dir*/
 	memcpy(DATAOFFSET+block*BLOCKSIZE+cur->size, (void*) name, strlen(name));
 	cur->size += strlen(name);
+	
 
 	/*copy self into new_inode dblocks*/
 	memcpy(DATAOFFSET+new_inode->dblocks[0]*BLOCKSIZE, (void*) self, sizeof(dentry));
@@ -382,7 +396,6 @@ int f_mkdir(char *name){
 	(void*) self_name, sizeof(self_name));
 
 	return 0;
-	//CHANGE LAST TO NOT LAST
 }
 
 
