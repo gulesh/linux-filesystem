@@ -399,7 +399,67 @@ int f_mkdir(char *name){
 }
 
 
+int f_rmdir(char* path){
+	int fd = f_opendir(path);
+	int n = open_fd_table[fd][FD_INODE];
+	inode *rm_inode = get_open_inode(n);
+	/*check if folder is not empty*/
 
+	/*add dir block to the pool of free blocks*/
+	int block = rm_inode->dblocks[0];
+	void *curr_free = malloc(sizeof(int));
+	*(int *) curr_free = sb->free_block;
+	memcpy(DATAOFFSET+block*BLOCKSIZE, curr_free, sizeof(int));
+	sb->free_block = block;
+	/*add dir inode to the pool of free inodes*/
+	rm_inode->next_inode = sb->free_inode;
+	rm_inode->nlink = 0;
+	rm_inode->size = 0;
+	sb->free_inode = n;
+	/*remove dentry from parent inode*/
+	int count = 0;
+	int i = 0
+	while(1){
+		char temp = path[i];
+		if (temp == '/')
+			count=i;
+		if (temp == '\0')
+			break
+		i++;
+	}
+	printf("count = %d\n", count);
+	int fd_parent;
+	if count = 0
+		fd_parent = 0;
+
+	else{
+		char *parent_path = malloc(count + 1);
+		memcpy(parent_path, path, count);
+		strcat(parent_path, '\0');
+		printf("parent_path: %s\n", parent_path);
+		fd_parent = f_opendir(parent_path);
+	}
+	int n_parent = open_fd_table[fd_parent][FD_INODE];
+	inode *parent_inode = get_open_inode(n_parent);
+	int parent_block = parent_inode->dblocks[0];
+	dentry *temp = (dentry *)(DATAOFFSET + parent_block*BLOCKSIZE);
+	dentry *prev = (dentry *)(DATAOFFSET + parent_block*BLOCKSIZE);
+    do{
+        if (temp->n == n){
+			if(temp->last == 1){
+				prev->last = 1;
+			}
+			else{
+				prev->size+=temp->size;
+			}
+            break;
+        }
+		prev = temp;
+        temp = (dentry *)((void *)temp + temp->size);
+    }while(1);
+
+	return 0;
+}
 
 
 
