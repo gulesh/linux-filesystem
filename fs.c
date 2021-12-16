@@ -20,7 +20,9 @@ static int get_block(int );
 static int get_fd(int );
 static void read_disk(char * );
 static void free_and_exit();
+static void print_open_fd();
 static int add_to_inode_table(int );
+static void print_open_inodes();
 static void update_open_inode(int );
 static inode *get_open_inode(int );
 
@@ -227,7 +229,7 @@ int f_open(char * file, int mode){
 			/*update parent size*/
 			inode *parent = (inode *)(INODEOFFSET 
 				+ curr_i*(int)sizeof(inode));	
-			parent->size+=sizeof(dentry);
+			parent->size+=(int)sizeof(dentry);
 			memcpy(DATAOFFSET + curr_d*BLOCKSIZE+parent->size, 
 				(void*)tokens[idx-1], strlen(tokens[idx-1]));
 			parent->size+=strlen(tokens[idx-1]);
