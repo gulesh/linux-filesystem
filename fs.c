@@ -400,7 +400,7 @@ int f_mkdir(char *name){
 
 
 int f_rmdir(char* path){
-	printf("(FROM LIB) path is %d\n", path);
+	printf("(FROM LIB) path is %s\n", path);
 	
 	int fd = f_opendir(path);
 	int n = open_fd_table[fd][FD_INODE];
@@ -426,7 +426,7 @@ int f_rmdir(char* path){
 	int i = 0;
 	while(1){
 		char temp = path[i];
-		printf("(FROM LIB) %d:%c", i, temp)
+		printf("(FROM LIB) %d:%c", i, temp);
 		if (temp == '/')
 			count=i;
 		if (temp == '\0')
@@ -441,7 +441,7 @@ int f_rmdir(char* path){
 	else{
 		char *parent_path = malloc(count + 1);
 		memcpy(parent_path, path, count);
-		strcat(parent_path, '');
+		parent_path[count] = '\0';
 		printf("parent_path: %s\n", parent_path);
 		fd_parent = f_opendir(parent_path);
 	}
