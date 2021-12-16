@@ -424,12 +424,12 @@ int f_rmdir(char* path){
 		if (temp == '/')
 			count=i;
 		if (temp == '\0')
-			break
+			break;
 		i++;
 	}
 	printf("count = %d\n", count);
 	int fd_parent;
-	if (count == 0){
+	if (count == 0)
 		fd_parent = 0;
 
 	else{
