@@ -400,9 +400,12 @@ int f_mkdir(char *name){
 
 
 int f_rmdir(char* path){
+	printf("(FROM LIB) path is %d\n", path);
+	
 	int fd = f_opendir(path);
 	int n = open_fd_table[fd][FD_INODE];
 	inode *rm_inode = get_open_inode(n);
+	printf("(FROM LIB) n = %d\n", n);
 	/*check if folder is not empty*/
 
 	/*add dir block to the pool of free blocks*/
@@ -416,11 +419,14 @@ int f_rmdir(char* path){
 	rm_inode->nlink = 0;
 	rm_inode->size = 0;
 	sb->free_inode = n;
+	printf("(FROM LIB) free_inode is  %d; free_block is %d\n", 
+	sb->free_inode, sb->free_block);
 	/*remove dentry from parent inode*/
 	int count = 0;
 	int i = 0;
 	while(1){
 		char temp = path[i];
+		printf("(FROM LIB) %d:%c", i, temp)
 		if (temp == '/')
 			count=i;
 		if (temp == '\0')
@@ -435,7 +441,7 @@ int f_rmdir(char* path){
 	else{
 		char *parent_path = malloc(count + 1);
 		memcpy(parent_path, path, count);
-		strcat(parent_path, '\0');
+		strcat(parent_path, '');
 		printf("parent_path: %s\n", parent_path);
 		fd_parent = f_opendir(parent_path);
 	}
