@@ -26,11 +26,8 @@ int execute(char**);
 void sig_handler(int);
 int parse_special_cmds(char **);
 int ls_exe(int , char* , char* );
-void absolute_path(char *, char *);
-int is_in_special(char*);
 
 int pwd_fd = 0; 
-
 
 int main(int argc, char *argv[]){
 	for(int i=0; i<= _NSIG; i++){
@@ -136,6 +133,25 @@ char **parse(char* command){
 
 }
 
+int is_in_special(char *cmd){
+	int n = 5;
+	char *special[n];
+	for (int i=0; i<n; i++){
+		special[i] = malloc(MAX_LEN);
+	}
+	special[0] = "cd";
+	special[1] = "ls";
+	special[2] = "mkdir";
+	special[3] = "pwd";
+	special[4] = "rm";
+
+	for (int i = 0; i<n; i++){
+		if(strcmp(cmd, special[i]) == 0){
+			return 1;
+		}
+	}
+	return 0;
+}
 
 
 int execute(char **tokens){
@@ -149,9 +165,8 @@ int execute(char **tokens){
 	else if (strcmp(tokens[0], "exit") == 0){
 		return 1;	
 	}
-	/* when parse special returns -1 (normal fail), it still goes to
-	 * else statement. 
-	 * reason for mkdir happening twice */
+	/*When parse special returns -1 (normal fail), it still goes to else
+	statement. Reason for mkdir happening twice*/
 	else if (is_in_special(tokens[0])) {
 		return parse_special_cmds(tokens);
 	}
@@ -193,19 +208,11 @@ int parse_special_cmds(char **tokens){
 	if (strcmp(tokens[0], "cat") == 0){
 		/* cat is here */
 		
+		char * filename = tokens[1];
 		int fd, numread;
-		void* buffer = malloc(2);
+		void* buffer = malloc(4);
 
-		char* temp = malloc(MAX_LEN*MAX_LEN);	
-		absolute_path(tokens[1], temp);
-		char *temp_for_open = malloc(MAX_LEN*MAX_LEN);
-		strcpy(temp_for_open, temp);
-		printf("f_open temp_for_open: %s\n", temp_for_open);
-
-		if (!(fd = f_open(temp_for_open))){
-			/* error opening file */
-			printf("cat: error opening file\n");
-		}
+		fd = f_open(filename);
 		while (1){
 			numread = f_read(fd, 1, buffer);
 			if (numread == 0){ 
@@ -215,13 +222,9 @@ int parse_special_cmds(char **tokens){
 			/* replace carriage returns with \n */
 			if (*(char*)buffer == '\r') *(char*)buffer='\n';
 
-			printf("%c", *(char*)buffer);
+			printf("%s", (char*)buffer);
 		}
 		printf("\n");
-
-		free(temp);
-		free(temp_for_open);
-		free(buffer);
 		return 0;
 
 	} else if (strcmp(tokens[0], "more") == 0) {
@@ -229,21 +232,11 @@ int parse_special_cmds(char **tokens){
 
 		/* TODO make space or enter print more TODO */
 
-		int newlinecount;
-		int fd, numread;
-		void* buffer = malloc(2);
+		char * filename = tokens[1];
+		int fd, numread, newlinecount;
+		void* buffer = malloc(4);
 
-		char* temp = malloc(MAX_LEN*MAX_LEN);	
-		absolute_path(tokens[1], temp);
-		char *temp_for_open = malloc(MAX_LEN*MAX_LEN);
-		strcpy(temp_for_open, temp);
-		printf("f_open temp_for_open: %s\n", temp_for_open);
-
-		fd = f_open(temp_for_open);
-
-		
-
-
+		fd = f_open(filename);
 		while (1){
 			numread = f_read(fd, 1, buffer);
 			if (numread == 0){ 
@@ -257,17 +250,12 @@ int parse_special_cmds(char **tokens){
 			if (*(char*)buffer == '\n') newlinecount ++;
 			if (newlinecount >= MAXMORENEWLINE-1) break;
 
-			printf("%c", *(char*)buffer);
+			printf("%s", (char*)buffer);
 		}
 		printf("\n");
-		free(buffer);
-		free(temp);
-		free(temp_for_open);
 		return 0;
 
 	} 
-
-
 	else if (strcmp(tokens[0], "ls") == 0){
 		/* ls here */
 		if (tokens[1] == NULL){
@@ -285,150 +273,137 @@ int parse_special_cmds(char **tokens){
 
 
 
-//	} else if (strcmp(tokens[0], "rm") == 0){
-//		/* rm is parsed here */
-//		char* temp = malloc(MAX_LEN*MAX_LEN);	
-//		if (tokens[1][0] == '/'){
-//				/* absolute path specified */
-//				strcpy(temp, tokens[1]);
-//				strcat(temp, "/");
-//				char *temp_for_open = malloc(MAX_LEN*MAX_LEN);
-//				strcpy(temp_for_open, temp);
-//				int fd = f_rm(temp_for_open);
-//				if (fd == -1){
-//					/* invalid path */
-//					return 0;
-//				}
-//			}
-//			else {
-//				printf("In relative\n");
-//				/* relative path specified */
-//				strcat(temp, tokens[1]);
-//				strcat(temp, "/");
-//				printf("len of temp: %ld\n", strlen(temp));
-//				printf("temp: %s\n", temp);
-//				char *temp_for_open = malloc(MAX_LEN*MAX_LEN);
-//				strcpy(temp_for_open, temp);
-//				int status = f_rm(temp_for_open);
-//				if (status == -1){
-//					/* invalid path */
-//					printf("invalid\n");
-//					return 0;	
-//				}
-//			}
-//		return 0;	
-//
-	} else if (strcmp(tokens[0], "rmdir") == 0){
-		char* temp = malloc(MAX_LEN*MAX_LEN);	
-		char *temp_for_open = malloc(MAX_LEN*MAX_LEN);
-		absolute_path(tokens[1], temp);
-		strcpy(temp_for_open, temp);
-		printf("temp_for_open: %s\n",temp_for_open);
-		int status = f_rmdir(temp_for_open);
-		if (status == -1){
-			/* invalid path */
-			printf("invalid\n");
-			return 0;	
-		}
-		free(temp_for_open);
-		free(temp);
+	} else if (strcmp(tokens[0], "rm") == 0){
+		if (tokens[1][0] == '/'){
+				/* absolute path specified */
+				strcpy(temp, tokens[1]);
+				strcat(temp, "/");
+				char *temp_for_open = malloc(MAX_LEN*MAX_LEN);
+				strcpy(temp_for_open, temp);
+				int fd = f_rm(temp_for_open);
+				if (fd == -1){
+					/* invalid path */
+					return 0;
+				}
+			}
+			else {
+				printf("In relative\n");
+				/* relative path specified */
+				strcat(temp, tokens[1]);
+				strcat(temp, "/");
+				printf("len of temp: %ld\n", strlen(temp));
+				printf("temp: %s\n", temp);
+				char *temp_for_open = malloc(MAX_LEN*MAX_LEN);
+				strcpy(temp_for_open, temp);
+				int status = f_rm(temp_for_open);
+				if (status == -1){
+					/* invalid path */
+					printf("invalid\n");
+					return 0;	
+				}
+			}
 		return 0;	
-
+	}else if (strcmp(tokens[0], "rmdir") == 0){
+		if (tokens[1][0] == '/'){
+				/* absolute path specified */
+				strcpy(temp, tokens[1]);
+				strcat(temp, "/");
+				char *temp_for_open = malloc(MAX_LEN*MAX_LEN);
+				strcpy(temp_for_open, temp);
+				int fd = f_rmdir(temp_for_open);
+				if (fd == -1){
+					/* invalid path */
+					return 0;
+				}
+			}
+			else {
+				printf("In relative\n");
+				/* relative path specified */
+				strcat(temp, tokens[1]);
+				strcat(temp, "/");
+				printf("len of temp: %ld\n", strlen(temp));
+				printf("temp: %s\n", temp);
+				char *temp_for_open = malloc(MAX_LEN*MAX_LEN);
+				strcpy(temp_for_open, temp);
+				int status = f_rmdir(temp_for_open);
+				if (status == -1){
+					/* invalid path */
+					printf("invalid\n");
+					return 0;	
+				}
+			}
+		return 0;	
 	} else if (strcmp(tokens[0], "pwd") == 0){
 		/* pwd is here */
 		
 		printf("%s\n", pwd);
 		return 0;
 
-	} else if (strcmp(tokens[0], "cd") == 0) {
+	} else if (strcmp(tokens[0], "cd") == 0){
 		/* cd is here */
+		printf("tokens[1] is %s\n", tokens[1]);
 		/* store pwd in case invalid path is supplied */
 		char* temp = malloc(MAX_LEN*MAX_LEN);	
 		strcpy(temp, pwd);
+		printf("len of temp: %ld\n", strlen(temp));
 
 		if (!tokens[1]){
 			/* change to root directory if no path specified */
 			strcpy(temp, "/");
-			strcpy(pwd, temp);
 			pwd_fd = 0;
 		} 
 		else if (!strcmp(tokens[1],".")) {
 			/* stay in the same directory */
 		} 
 		else {
-			/* parse path to dir and open */
-			absolute_path(tokens[1], temp);
-			char *temp_for_open = malloc(MAX_LEN*MAX_LEN);
-			strcpy(temp_for_open, temp);
-			printf("f_opendir temp_for_open: %s\n", temp_for_open);
-			int status = f_opendir(temp_for_open);
-			if (status == -1){
-				/* invalid path */
-				printf("invalid\n");
-				return 0;	
+			if (tokens[1][0] == '/'){
+				/* absolute path specified */
+				strcpy(temp, tokens[1]);
+				strcat(temp, "/");
+				char *temp_for_open = malloc(MAX_LEN*MAX_LEN);
+				strcpy(temp_for_open, temp);
+				int fd = f_opendir(temp_for_open);
+				if (fd == -1){
+					/* invalid path */
+					return 0;
+				}
+				pwd_fd = fd;
 			}
-			pwd_fd = status;
+			else {
+				printf("In relative\n");
+				/* relative path specified */
+				strcat(temp, tokens[1]);
+				strcat(temp, "/");
+				printf("len of temp: %ld\n", strlen(temp));
+				printf("temp: %s\n", temp);
+				char *temp_for_open = malloc(MAX_LEN*MAX_LEN);
+				strcpy(temp_for_open, temp);
+				int status = f_opendir(temp_for_open);
+				if (status == -1){
+					/* invalid path */
+					printf("invalid\n");
+					return 0;	
+				}
+				pwd_fd = status;
+			}
 
-			strcpy(pwd,temp);
-			printf("temp: %s\n", temp);
-			printf("pwd: %s\n", pwd);
-			free(temp_for_open);
 		}
-		free(temp);
+
+		strcpy(pwd,temp);
+		printf("Temp: %s\n", temp);
+		printf("PWD: %s\n", pwd);
 		
 		return 0;
-
-
-	} else if (strcmp(tokens[0], "mkdir") == 0){
+	} 
+	else if (strcmp(tokens[0], "mkdir") == 0){
 		f_mkdir(tokens[1]);
 		return 0;
 	}
 
 
-/* no special commands parsed */
-return 1;
+	/* no special commands parsed */
+	return 1;
 
-}
-
-int is_in_special(char *cmd){
-	int n = 8;
-	char special[n][MAX_LEN];
-
-	strcpy(special[0] , "cd");
-	strcpy(special[1] , "ls");
-	strcpy(special[2] , "mkdir");
-	strcpy(special[3] , "pwd");
-	strcpy(special[4] , "rm");
-	strcpy(special[5] , "cat");
-	strcpy(special[6] , "rmdir");
-	strcpy(special[7] , "more");
-
-	for (int i = 0; i<n; i++){
-		if(strcmp(cmd, special[i]) == 0){
-			return 1;
-		}
-	}
-	return 0;
-}
-
-
-void  absolute_path(char * path, char* temp){
-/* parse string into absolute path */
-	if (path[0] == '/'){
-		/* absolute path specified */
-		printf("converting absolute path\n");
-		strcpy(temp, path);
-		if (path[1] != '\0'){
-			/* account for just "/" path */
-			strcat(temp, "/");
-		}
-	} else {
-		printf("converting relative path\n");
-		/* relative path specified */
-		strcpy(temp, pwd);
-		strcat(temp, path);
-		strcat(temp, "/");
-	}
 }
 
 int ls_exe(int isflag, char* flag, char* folder){
@@ -459,11 +434,13 @@ int ls_exe(int isflag, char* flag, char* folder){
 				printf("%s%s%s\t",GREEN, name, RESET);
 			else
 				printf("%s\t",name);
-			if (count %4 == 0) printf("\n");
+			if (count %4 == 0)
+				printf("\n");
 			count+=1;	
 			temp = f_readdir(fd); //update the temp until we reach NULL
 		}
-		if ((count-1) % 4 != 0) printf("\n");
+		if ((count-1) % 4 != 0)
+			printf("\n");
 	}	
 	return 0;
 }
