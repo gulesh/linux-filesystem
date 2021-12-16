@@ -13,10 +13,12 @@
 
 extern char *pwd;
 
-int f_open(char * );
+int f_open(char * , int);
 int f_read(int, int, void* );
+int f_write(void *, int, int );
 int f_opendir(char * );
 dentry *f_readdir(int );
 int f_mkdir(char * );
 int f_rmdir(char * );
 void init_library(char *);
+void close_library();
