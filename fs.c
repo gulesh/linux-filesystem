@@ -342,7 +342,7 @@ int f_mkdir(char *name){
 	printf("free_inode: %d\n", sb->free_inode);
 	printf("free_block: %d\n", sb->free_block);
 	int f = sb->free_inode;
-	inode *new_inode = (inode *) (INODEOFFSET + sb->free_inode*(int)sizeof(inode));
+	inode *new_inode = (inode *) (INODEOFFSET + f*(int)sizeof(inode));
 	printf("next: %d\n", new_inode->next_inode);
 	new_inode->type = DIRECTORY;
 	new_inode->nlink = 1;
@@ -402,7 +402,10 @@ int f_mkdir(char *name){
 int f_rmdir(char* path){
 	printf("(FROM LIB) path is %s\n", path);
 	
-	int fd = f_opendir(path);
+	char *temp_path = malloc(MAX_LEN);
+	strcpy(temp_path, path);
+	int fd = f_opendir(temp_path);
+	free(temp_path);
 	if (fd == -1)
 		printf("");
 	int n = open_fd_table[fd][FD_INODE];
@@ -423,6 +426,7 @@ int f_rmdir(char* path){
 	sb->free_inode = n;
 	printf("(FROM LIB) free_inode is  %d; free_block is %d\n", 
 		sb->free_inode, sb->free_block);
+	printf("(FROM LIB) next is  %d\n", rm_inode->next_inode); 
 	/*remove dentry from parent inode*/
 	int count = 0;
 	int i = 0;
