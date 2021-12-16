@@ -89,7 +89,6 @@ char *read_command(){
 		exit(1);
 	}
 
-
 	int i = 0;
 	while (1){
 		int sz = read(STDIN_FILENO, &c, 1);
@@ -242,7 +241,7 @@ int parse_special_cmds(char **tokens){
 
 		fd = f_open(temp_for_open);
 
-			
+		
 
 
 		while (1){
