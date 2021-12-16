@@ -255,8 +255,6 @@ int parse_special_cmds(char **tokens){
 		printf("\n");
 		return 0;
 
-
-
 	} 
 	else if (strcmp(tokens[0], "ls") == 0){
 		/* ls here */
@@ -275,13 +273,71 @@ int parse_special_cmds(char **tokens){
 
 
 
+	} else if (strcmp(tokens[0], "rm") == 0){
+		if (tokens[1][0] == '/'){
+				/* absolute path specified */
+				strcpy(temp, tokens[1]);
+				strcat(temp, "/");
+				char *temp_for_open = malloc(MAX_LEN*MAX_LEN);
+				strcpy(temp_for_open, temp);
+				int fd = f_rm(temp_for_open);
+				if (fd == -1){
+					/* invalid path */
+					return 0;
+				}
+			}
+			else {
+				printf("In relative\n");
+				/* relative path specified */
+				strcat(temp, tokens[1]);
+				strcat(temp, "/");
+				printf("len of temp: %ld\n", strlen(temp));
+				printf("temp: %s\n", temp);
+				char *temp_for_open = malloc(MAX_LEN*MAX_LEN);
+				strcpy(temp_for_open, temp);
+				int status = f_rm(temp_for_open);
+				if (status == -1){
+					/* invalid path */
+					printf("invalid\n");
+					return 0;	
+				}
+			}
+		return 0;	
+	}else if (strcmp(tokens[0], "rmdir") == 0){
+		if (tokens[1][0] == '/'){
+				/* absolute path specified */
+				strcpy(temp, tokens[1]);
+				strcat(temp, "/");
+				char *temp_for_open = malloc(MAX_LEN*MAX_LEN);
+				strcpy(temp_for_open, temp);
+				int fd = f_rmdir(temp_for_open);
+				if (fd == -1){
+					/* invalid path */
+					return 0;
+				}
+			}
+			else {
+				printf("In relative\n");
+				/* relative path specified */
+				strcat(temp, tokens[1]);
+				strcat(temp, "/");
+				printf("len of temp: %ld\n", strlen(temp));
+				printf("temp: %s\n", temp);
+				char *temp_for_open = malloc(MAX_LEN*MAX_LEN);
+				strcpy(temp_for_open, temp);
+				int status = f_rmdir(temp_for_open);
+				if (status == -1){
+					/* invalid path */
+					printf("invalid\n");
+					return 0;	
+				}
+			}
+		return 0;	
 	} else if (strcmp(tokens[0], "pwd") == 0){
 		/* pwd is here */
 		
 		printf("%s\n", pwd);
 		return 0;
-
-
 
 	} else if (strcmp(tokens[0], "cd") == 0){
 		/* cd is here */
