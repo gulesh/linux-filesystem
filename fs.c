@@ -406,6 +406,7 @@ int f_rmdir(char* path){
 	strcpy(temp_path, path);
 	int fd = f_opendir(temp_path);
 	free(temp_path);
+	temp[strlen(temp) - 1] = '\0';
 	if (fd == -1)
 		printf("");
 	int n = open_fd_table[fd][FD_INODE];
