@@ -1,16 +1,25 @@
-# linux-filesystem
+# HW7
 
-### Design of the file system
+### Gulesh, Ivan, and Mohamed
 
-Thegr
+## Compilation
 
-#### Shell-site
+Compile the shell link to library using **make**. remove excuetables
+with make clean.  Explore other shortcuts for compiling the library, the
+shell, and the format utility separately in the Makefile. Run using
+./mysh. Compile the format utility using make format.  Run using
+./format.exec.
 
-### Design deviation
 
-### What works and what doesn't
+## Basic Structure
 
-Library functions that we have implemented are:
+A 1 mb disk is present and is mounted automatically. The disk contains
+the root mount point, a directory inside it named usr, and a sample test
+file inside usr called file.text.  The structure of the file system is
+very similar to the disk from HW6, with 10 direct blocks, 4 singly
+indirect, 1 doubly and one triply. The signatures of the library
+functions are shown below.
+
 
 ```
 int f_open(char * , int);
@@ -18,7 +27,7 @@ int f_open(char * , int);
 
 int f_read(int fileno, int number_of_bytes, 
 		void* pointer_to_read_buffer );
-
+int f_open(char * , int);
 int f_write(void *, int, int );
 int f_opendir(char * );
 dentry *f_readdir(int );
@@ -28,4 +37,16 @@ void init_library(char *);
 void close_library();
 ```
 
-### Testing
+
+We keep 3 global data structures shared between the shell and the
+library
+
+## Implemented Features
+
+## Tests
+
+## Limitations
+
+## Problematic Features
+
+## Memory Management
