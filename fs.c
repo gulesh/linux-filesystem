@@ -418,7 +418,7 @@ int f_rmdir(char* path){
 	sb->free_inode = n;
 	/*remove dentry from parent inode*/
 	int count = 0;
-	int i = 0
+	int i = 0;
 	while(1){
 		char temp = path[i];
 		if (temp == '/')
@@ -429,7 +429,7 @@ int f_rmdir(char* path){
 	}
 	printf("count = %d\n", count);
 	int fd_parent;
-	if count = 0
+	if (count == 0){
 		fd_parent = 0;
 
 	else{
