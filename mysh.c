@@ -42,6 +42,8 @@ int main(int argc, char *argv[]){
 	}
 	init_library("DISK");
 	loop();
+	//free(output);
+	close_library();
 	return 0;
 }
 
