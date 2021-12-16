@@ -17,7 +17,7 @@
 #define GREEN   "\x1b[32m"
 #define RESET   "\x1b[0m"
 
-#define MAXMORENEWLINE 2
+#define MAXMORENEWLINE 5
 
 void loop();
 char *read_command();
@@ -51,7 +51,6 @@ void sig_handler(int sig){
 	/*change to 1 for easy exit*/
 	if(1){
 		if(sig == SIGINT){
-			exit(1);
 		}
 
 		else{
@@ -169,7 +168,7 @@ char **parse(char* command){
 		i++;
 		token = strtok(NULL, DELIMITERS);
 	}
-	// To make it null-terminating
+	// To make it null-tecrminating
 	tbuf[i] = NULL;
 	return tbuf;
 
@@ -391,7 +390,9 @@ int parse_special_cmds(char **tokens){
 //			}
 //		return 0;	
 //
-	} else if (strcmp(tokens[0], "rmdir") == 0){
+	} else if (strcmp(tokens[0], "rm") == 0){ } else if
+		(strcmp(tokens[0], "rmdir") == 0 || strcmp(tokens[0], "rm") ==
+		 0){
 		char* temp = malloc(MAX_LEN*MAX_LEN);	
 		char *temp_for_open = malloc(MAX_LEN*MAX_LEN);
 		absolute_path(tokens[1], temp);
