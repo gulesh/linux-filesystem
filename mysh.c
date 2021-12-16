@@ -372,7 +372,6 @@ int parse_special_cmds(char **tokens){
 		/* cd is here */
 		/* store pwd in case invalid path is supplied */
 		char* temp = malloc(MAX_LEN*MAX_LEN);	
-		strcpy(temp, pwd);
 
 		if (!tokens[1]){
 			/* change to root directory if no path specified */
@@ -396,7 +395,6 @@ int parse_special_cmds(char **tokens){
 				return 0;	
 			}
 			pwd_fd = status;
-
 			strcpy(pwd,temp);
 			printf("temp: %s\n", temp);
 			printf("pwd: %s\n", pwd);
@@ -440,7 +438,7 @@ int is_in_special(char *cmd){
 }
 
 
-void  absolute_path(char * path, char* temp){
+void absolute_path(char * path, char* temp){
 /* parse string into absolute path */
 	if (path[0] == '/'){
 		/* absolute path specified */
