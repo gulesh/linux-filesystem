@@ -403,11 +403,13 @@ int f_rmdir(char* path){
 	printf("(FROM LIB) path is %s\n", path);
 	
 	int fd = f_opendir(path);
+	if (fd == -1)
+		printf("");
 	int n = open_fd_table[fd][FD_INODE];
 	inode *rm_inode = get_open_inode(n);
 	printf("(FROM LIB) n = %d\n", n);
 	/*check if folder is not empty*/
-
+	
 	/*add dir block to the pool of free blocks*/
 	int block = rm_inode->dblocks[0];
 	void *curr_free = malloc(sizeof(int));
@@ -426,7 +428,7 @@ int f_rmdir(char* path){
 	int i = 0;
 	while(1){
 		char temp = path[i];
-		printf("(FROM LIB) %d:%c", i, temp);
+		printf("(FROM LIB) %d:%c\n", i, temp);
 		if (temp == '/')
 			count=i;
 		if (temp == '\0')
