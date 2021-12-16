@@ -28,9 +28,13 @@ int parse_special_cmds(char **);
 int ls_exe(int , char* , char* );
 void absolute_path(char *, char *);
 int is_in_special(char*);
+void redirect();
 
 int pwd_fd = 0; 
-
+int redirect_flag = 0;
+char *output;
+/*redirection file descriptor*/
+int d;
 
 int main(int argc, char *argv[]){
 	for(int i=0; i<= _NSIG; i++){
@@ -72,8 +76,35 @@ void loop(){
 		command = read_command();
 		tokens = parse(command); 
 		status = execute(tokens); // returns 0 on success
+		redirect();
 		free(command);
 		free(tokens);
+	}
+}
+
+void redirect(){
+	if (redirect_flag == 1){
+		FILE *f = fopen("re", "rb");
+		fseek(f, 0, SEEK_END);
+		long fsize = ftell(f);
+		fseek(f, 0, SEEK_SET); 
+
+		char *b = malloc(fsize + 1);
+		fread(b, fsize, 1, f);
+		fclose(f);
+
+		b[fsize] = '\0';
+		/*open new file in out file system using global 'output'*/
+		char* temp = malloc(MAX_LEN*MAX_LEN);
+        absolute_path(output, temp);
+        char *temp_for_open = malloc(MAX_LEN*MAX_LEN);
+        strcpy(temp_for_open, temp);
+		int new = f_open(temp_for_open, 1);
+		f_write(b, fsize, new);
+		free(temp);
+		free(temp_for_open);
+		free(b);
+		redirect_flag = 0;
 	}
 }
 
@@ -126,6 +157,12 @@ char **parse(char* command){
 	int i = 0;
 	token = strtok(command, DELIMITERS);
 	while(token != NULL){
+		if (strcmp(token, ">") == 0){
+			redirect_flag = 1;
+			output = malloc(MAX_LEN);
+			output = strtok(NULL, DELIMITERS);
+			break;
+		}
 		tbuf[i] = token;
 		i++;
 		token = strtok(NULL, DELIMITERS);
@@ -143,25 +180,33 @@ int execute(char **tokens){
 
 	/* if enter is pressed */
 	if (tokens[0] == NULL){
+		redirect_flag = 0;
 		return 0;
 	}
 	/* handles exit */
 	else if (strcmp(tokens[0], "exit") == 0){
+		redirect_flag = 0;
 		return 1;	
 	}
 	/* when parse special returns -1 (normal fail), it still goes to
 	 * else statement. 
 	 * reason for mkdir happening twice */
 	else if (is_in_special(tokens[0])) {
+		redirect_flag = 0;
 		return parse_special_cmds(tokens);
 	}
 	else{
 		int status;
 		pid_t pid, wpid;
-
 		pid = fork();
 		if (pid == 0){
 			/* child code */
+			if (redirect_flag == 1){
+				int fd = open("re", O_RDWR | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR);
+				/*d is a global file descriptor for the file with stdout*/
+				d = dup2(fd, 1);
+				close(fd);
+			}
 			if (execvp(tokens[0], tokens) == -1) {
 				/* if exec doesn't succeed */
 				printf("Error executing command!\n");
@@ -200,9 +245,8 @@ int parse_special_cmds(char **tokens){
 		absolute_path(tokens[1], temp);
 		char *temp_for_open = malloc(MAX_LEN*MAX_LEN);
 		strcpy(temp_for_open, temp);
-		printf("f_open temp_for_open: %s\n", temp_for_open);
 
-		if (!(fd = f_open(temp_for_open))){
+		if (!(fd = f_open(temp_for_open, 0))){
 			/* error opening file */
 			printf("cat: error opening file\n");
 		}
@@ -237,9 +281,8 @@ int parse_special_cmds(char **tokens){
 		absolute_path(tokens[1], temp);
 		char *temp_for_open = malloc(MAX_LEN*MAX_LEN);
 		strcpy(temp_for_open, temp);
-		printf("f_open temp_for_open: %s\n", temp_for_open);
 
-		fd = f_open(temp_for_open);
+		fd = f_open(temp_for_open,0);
 
 		
 
@@ -323,11 +366,9 @@ int parse_special_cmds(char **tokens){
 		char *temp_for_open = malloc(MAX_LEN*MAX_LEN);
 		absolute_path(tokens[1], temp);
 		strcpy(temp_for_open, temp);
-		printf("temp_for_open: %s\n",temp_for_open);
 		int status = f_rmdir(temp_for_open);
 		if (status == -1){
 			/* invalid path */
-			printf("invalid\n");
 			return 0;	
 		}
 		free(temp_for_open);
@@ -359,17 +400,13 @@ int parse_special_cmds(char **tokens){
 			absolute_path(tokens[1], temp);
 			char *temp_for_open = malloc(MAX_LEN*MAX_LEN);
 			strcpy(temp_for_open, temp);
-			printf("f_opendir temp_for_open: %s\n", temp_for_open);
 			int status = f_opendir(temp_for_open);
 			if (status == -1){
 				/* invalid path */
-				printf("invalid\n");
 				return 0;	
 			}
 			pwd_fd = status;
 			strcpy(pwd,temp);
-			printf("temp: %s\n", temp);
-			printf("pwd: %s\n", pwd);
 			free(temp_for_open);
 		}
 		free(temp);
@@ -414,14 +451,12 @@ void absolute_path(char * path, char* temp){
 /* parse string into absolute path */
 	if (path[0] == '/'){
 		/* absolute path specified */
-		printf("converting absolute path\n");
 		strcpy(temp, path);
 		if (path[1] != '\0'){
 			/* account for just "/" path */
 			strcat(temp, "/");
 		}
 	} else {
-		printf("converting relative path\n");
 		/* relative path specified */
 		strcpy(temp, pwd);
 		strcat(temp, path);
@@ -462,7 +497,8 @@ int ls_exe(int isflag, char* flag, char* folder){
 			temp = f_readdir(fd); //update the temp until we reach NULL
 		}
 		if ((count-1) % 4 != 0) printf("\n");
-	}	
+		free(temp);
+	}
 	return 0;
 }
 
