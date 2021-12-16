@@ -459,6 +459,7 @@ int f_rmdir(char* path){
 			if(temp->last == 1){
 				printf("(FROM LIB) temp->n: %d; prev->n: %d\n", temp->n, prev->n); 
 				prev->last = 1;
+				parent_inode->size-=temp->size;
 			}
 			else{
 				prev->size+=temp->size;
