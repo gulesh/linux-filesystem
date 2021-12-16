@@ -17,7 +17,7 @@
 #define GREEN   "\x1b[32m"
 #define RESET   "\x1b[0m"
 
-#define MAXMORENEWLINE 2
+#define MAXMORENEWLINE 5
 
 void loop();
 char *read_command();
@@ -51,7 +51,6 @@ void sig_handler(int sig){
 	/*change to 1 for easy exit*/
 	if(1){
 		if(sig == SIGINT){
-			exit(1);
 		}
 
 		else{
