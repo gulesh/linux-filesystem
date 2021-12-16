@@ -422,7 +422,7 @@ int f_rmdir(char* path){
 	rm_inode->size = 0;
 	sb->free_inode = n;
 	printf("(FROM LIB) free_inode is  %d; free_block is %d\n", 
-	sb->free_inode, sb->free_block);
+		sb->free_inode, sb->free_block);
 	/*remove dentry from parent inode*/
 	int count = 0;
 	int i = 0;
@@ -450,11 +450,14 @@ int f_rmdir(char* path){
 	int n_parent = open_fd_table[fd_parent][FD_INODE];
 	inode *parent_inode = get_open_inode(n_parent);
 	int parent_block = parent_inode->dblocks[0];
+	printf("(FROM LIB) n_parent is  %d; parent_block is %d\n", 
+		n_parent, parent_block);
 	dentry *temp = (dentry *)(DATAOFFSET + parent_block*BLOCKSIZE);
 	dentry *prev = (dentry *)(DATAOFFSET + parent_block*BLOCKSIZE);
     do{
         if (temp->n == n){
 			if(temp->last == 1){
+				printf("(FROM LIB) temp->n: %d; prev->n: %d\n", temp->n, prev->n); 
 				prev->last = 1;
 			}
 			else{
