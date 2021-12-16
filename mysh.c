@@ -193,17 +193,16 @@ int parse_special_cmds(char **tokens){
 	if (strcmp(tokens[0], "cat") == 0){
 		/* cat is here */
 		
-		char * filename = tokens[1];
 		int fd, numread;
-		void* buffer = malloc(1);
+		void* buffer = malloc(2);
 
 		char* temp = malloc(MAX_LEN*MAX_LEN);	
 		absolute_path(tokens[1], temp);
 		char *temp_for_open = malloc(MAX_LEN*MAX_LEN);
 		strcpy(temp_for_open, temp);
-		printf("f_opendir temp_for_open: %s\n", temp_for_open);
+		printf("f_open temp_for_open: %s\n", temp_for_open);
 
-		if (!(fd = f_open(filename))){
+		if (!(fd = f_open(temp_for_open))){
 			/* error opening file */
 			printf("cat: error opening file\n");
 		}
@@ -216,7 +215,7 @@ int parse_special_cmds(char **tokens){
 			/* replace carriage returns with \n */
 			if (*(char*)buffer == '\r') *(char*)buffer='\n';
 
-			printf("%s", (char*)buffer);
+			printf("%c", *(char*)buffer);
 		}
 		printf("\n");
 
@@ -230,11 +229,21 @@ int parse_special_cmds(char **tokens){
 
 		/* TODO make space or enter print more TODO */
 
-		char * filename = tokens[1];
-		int fd, numread, newlinecount;
-		void* buffer = malloc(4);
+		int newlinecount;
+		int fd, numread;
+		void* buffer = malloc(2);
 
-		fd = f_open(filename);
+		char* temp = malloc(MAX_LEN*MAX_LEN);	
+		absolute_path(tokens[1], temp);
+		char *temp_for_open = malloc(MAX_LEN*MAX_LEN);
+		strcpy(temp_for_open, temp);
+		printf("f_open temp_for_open: %s\n", temp_for_open);
+
+		fd = f_open(temp_for_open);
+
+		
+
+
 		while (1){
 			numread = f_read(fd, 1, buffer);
 			if (numread == 0){ 
@@ -248,10 +257,12 @@ int parse_special_cmds(char **tokens){
 			if (*(char*)buffer == '\n') newlinecount ++;
 			if (newlinecount >= MAXMORENEWLINE-1) break;
 
-			printf("%s", (char*)buffer);
+			printf("%c", *(char*)buffer);
 		}
 		printf("\n");
 		free(buffer);
+		free(temp);
+		free(temp_for_open);
 		return 0;
 
 	} 
@@ -378,7 +389,7 @@ return 1;
 }
 
 int is_in_special(char *cmd){
-	int n = 7;
+	int n = 8;
 	char special[n][MAX_LEN];
 
 	strcpy(special[0] , "cd");
@@ -388,6 +399,7 @@ int is_in_special(char *cmd){
 	strcpy(special[4] , "rm");
 	strcpy(special[5] , "cat");
 	strcpy(special[6] , "rmdir");
+	strcpy(special[7] , "more");
 
 	for (int i = 0; i<n; i++){
 		if(strcmp(cmd, special[i]) == 0){
