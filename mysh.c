@@ -17,7 +17,7 @@
 #define GREEN   "\x1b[32m"
 #define RESET   "\x1b[0m"
 
-#define MAXMORENEWLINE 3
+#define MAXMORENEWLINE 2
 
 void loop();
 char *read_command();
@@ -241,24 +241,52 @@ int parse_special_cmds(char **tokens){
 
 		fd = f_open(temp_for_open);
 
-		
+
+		char *line = NULL;
+		size_t len = 0;
+		ssize_t read;
 
 
-		while (1){
-			numread = f_read(fd, 1, buffer);
-			if (numread == 0){ 
-				break;
+		do {
+			newlinecount =0;
+			while (1){
+				numread = f_read(fd, 1, buffer);
+				if (numread == 0){ 
+					printf("\n");
+					free(buffer);
+					free(temp);
+					free(temp_for_open);
+					return 0;
+				}
+
+				/* replace carriage returns with \n */
+				if (*(char*)buffer == '\r') *(char*)buffer='\n';
+
+				/* cutoff after a certain number of newlines */
+				if (*(char*)buffer == '\n') newlinecount ++;
+				if (newlinecount >= MAXMORENEWLINE) break;
+
+				printf("%c", *(char*)buffer);
 			}
 
-			/* replace carriage returns with \n */
-			if (*(char*)buffer == '\r') *(char*)buffer='\n';
+		} while ((read = getline(&line, &len, stdin)) != -1);
 
-			/* cutoff after a certain number of newlines */
-			if (*(char*)buffer == '\n') newlinecount ++;
-			if (newlinecount >= MAXMORENEWLINE-1) break;
 
-			printf("%c", *(char*)buffer);
-		}
+//		while (1){
+//			numread = f_read(fd, 1, buffer);
+//			if (numread == 0){ 
+//				break;
+//			}
+//
+//			/* replace carriage returns with \n */
+//			if (*(char*)buffer == '\r') *(char*)buffer='\n';
+//
+//			/* cutoff after a certain number of newlines */
+//			if (*(char*)buffer == '\n') newlinecount ++;
+//			if (newlinecount >= MAXMORENEWLINE-1) break;
+//
+//			printf("%c", *(char*)buffer);
+//		}
 		printf("\n");
 		free(buffer);
 		free(temp);
