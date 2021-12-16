@@ -133,7 +133,25 @@ char **parse(char* command){
 
 }
 
+int is_in_special(char *cmd){
+	int n = 5;
+	char *special[n];
+	for (int i=0; i<n; i++){
+		special[i] = malloc(MAX_LEN);
+	}
+	special[0] = "cd";
+	special[1] = "ls";
+	special[2] = "mkdir";
+	special[3] = "pwd";
+	special[4] = "rm";
 
+	for (int i = 0; i<n; i++){
+		if(strcmp(cmd, special[i]) == 0){
+			return 1;
+		}
+	}
+	return 0;
+}
 
 
 int execute(char **tokens){
@@ -149,8 +167,8 @@ int execute(char **tokens){
 	}
 	/*When parse special returns -1 (normal fail), it still goes to else
 	statement. Reason for mkdir happening twice*/
-	else if (parse_special_cmds(tokens) == 0) {
-		return 0;
+	else if (is_in_special(tokens[0])) {
+		return parse_special_cmds(tokens);
 	}
 	else{
 		int status;
@@ -267,10 +285,11 @@ int parse_special_cmds(char **tokens){
 
 	} else if (strcmp(tokens[0], "cd") == 0){
 		/* cd is here */
-
+		printf("tokens[1] is %s\n", tokens[1]);
 		/* store pwd in case invalid path is supplied */
 		char* temp = malloc(MAX_LEN*MAX_LEN);	
 		strcpy(temp, pwd);
+		printf("len of temp: %ld\n", strlen(temp));
 
 		if (!tokens[1]){
 			/* change to root directory if no path specified */
@@ -284,16 +303,26 @@ int parse_special_cmds(char **tokens){
 			if (tokens[1][0] == '/'){
 				/* absolute path specified */
 				strcpy(temp, tokens[1]);
-				int fd = f_opendir(temp);
+				strcat(temp, "/");
+				char *temp_for_open = malloc(MAX_LEN*MAX_LEN);
+				strcpy(temp_for_open, temp);
+				int fd = f_opendir(temp_for_open);
 				if (fd == -1){
 					/* invalid path */
 					return 0;
 				}
+				pwd_fd = fd;
 			}
 			else {
+				printf("In relative\n");
 				/* relative path specified */
 				strcat(temp, tokens[1]);
-				int status = f_opendir(temp);
+				strcat(temp, "/");
+				printf("len of temp: %ld\n", strlen(temp));
+				printf("temp: %s\n", temp);
+				char *temp_for_open = malloc(MAX_LEN*MAX_LEN);
+				strcpy(temp_for_open, temp);
+				int status = f_opendir(temp_for_open);
 				if (status == -1){
 					/* invalid path */
 					printf("invalid\n");
@@ -301,16 +330,16 @@ int parse_special_cmds(char **tokens){
 				}
 				pwd_fd = status;
 			}
-		memcpy(temp + strlen(temp), "/", 1);
-		memcpy(pwd,temp, strlen(temp));
-		printf("Temp: %s\n", temp);
-		printf("PWD: %s\n", pwd);
 
 		}
+
+		strcpy(pwd,temp);
+		printf("Temp: %s\n", temp);
+		printf("PWD: %s\n", pwd);
 		
 		return 0;
 	} 
-	else if (strcmp(tokens[0], "mkdirr") == 0){
+	else if (strcmp(tokens[0], "mkdir") == 0){
 		f_mkdir(tokens[1]);
 		return 0;
 	}
