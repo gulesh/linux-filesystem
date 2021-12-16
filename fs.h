@@ -18,4 +18,5 @@ int f_read(int, int, void* );
 int f_opendir(char * );
 dentry *f_readdir(int );
 int f_mkdir(char * );
+int f_rmdir(char * );
 void init_library(char *);
