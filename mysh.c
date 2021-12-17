@@ -51,6 +51,7 @@ void sig_handler(int sig){
 	/*change to 1 for easy exit*/
 	if(1){
 		if(sig == SIGINT){
+		exit(1);
 		}
 
 		else{

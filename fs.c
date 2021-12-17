@@ -25,6 +25,7 @@ static int add_to_inode_table(int );
 static void print_open_inodes();
 static void update_open_inode(int );
 static inode *get_open_inode(int );
+static void update_disk();
 
 
 /*static int main(){
@@ -569,13 +570,28 @@ int f_write(void *buffer, int size, int fd){
 	return pasted;
 	
 }
+static void update_disk(){
+	for (int i = 0; i<MAX_OPEN; i++){
+        if (inode_table[i]->n != -1){
+            memcpy((void *)inode_table[i]->ptr, 
+			INODEOFFSET + inode_table[i]->n*sizeof(inode),
+			sizeof(inode));
+			break;
+        }
+    }
+
+}
 
 void close_library(){
+	update_disk();
 	for (int i = 0; i<MAX_OPEN; i++){
         free(inode_table[i]->ptr);
         free(inode_table[i]);
     }
 	free(pwd);
+	FILE *fd = fopen("DISK", "w");
+	fwrite(disk, disksize, 1, fd);
+	fclose(fd);
 	free(disk);
 	
 }

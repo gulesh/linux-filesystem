@@ -4,6 +4,8 @@
 
 ## Compilation
 
+PLEASE REFER TO THE LIMITAIONS SECTION BEFORE COMPILING AND RUNNING THIS PROGRAM.
+
 Compile the shell link to library using **make**. remove excuetables
 with make clean.  Explore other shortcuts for compiling the library, the
 shell, and the format utility separately in the Makefile. Run using
@@ -88,7 +90,7 @@ Library features available are summarized under library function
 signatures above.
 Function's behaviour, including return values, mostly mimics that of 
 standard Unix functions.
-Deviations are listed under problematic features section.
+Deviations are listed under limitations section.
 
 ### Shell features
 
@@ -165,15 +167,15 @@ file name length of 8 bytes and dentry size of 20, can hold only up to 18 files 
 makes readdir much simpler and less time-consuming.
 - permissions are not implemented at all and error checking is minimal.
 - .. is not included in directories. Going backwards in general is not implemented. This is ok 
-given the limitations of the disk size anyways. However, you can always go back to root using cd with 
-no arguments.
-- Closing files and directories is not implemented (at least for now). It's as easy as removing the 
-open fd table entry but it doesn't add any functionality to the shell so we chose to focus on other parts.
+given the limitations of the disk size anyways. However, you can always go back to root using cd with no arguments.
+- Closing files and directories is not implemented (at least for now). It's as easy as removing the open fd table entry but it doesn't add any functionality to the shell so we chose to focus on other parts.
 - Seek is not implemented (for now). Seek happens automatically with readdir but should be implemented in general. 
 This is a matter of changing the seek position in the open fd table so it won't be a problem.
 - none of ls flags are implemented, so is the f\_stat library function.
 - rmdir is implemented. rm isn't for now.
 - only > is implemented in redirection. It shows the functionality of f\_write.
+- format utility only creates 1 mb disk and doesn't have the option to create larger disks.
+- persistence on disk has an issue where the first created dir dowsn't show (but still exist). In the new DISK. In fact, this issue sometimes interfere with files in nested directories.
 
 ## Memory Management
 
