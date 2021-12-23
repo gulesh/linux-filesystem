@@ -1,7 +1,10 @@
+all: lib
+
 format: 
 	cc format.c util.h -o format.exec -I.
 fs:
 	cc fs.c util.h -o fs.exec -I.
+
 
 lib:
 	gcc -Wall -fpic  -c fs.c util.h

@@ -128,7 +128,7 @@ void create_new(int size){
 	if (fseek(disk, DATAOFFSET, SEEK_SET) == -1){
         free_and_exit();
     }
-	void *filename = ".";
+	void *filename = "/";
 
 	printf("ftell: %ld\n", ftell(disk));
 
@@ -218,11 +218,18 @@ void create_new(int size){
     free(buffer);
 
 	/*filling file.txt with content*/
-	char *content = "This is a test file.";
+	char *content = malloc(20);
+	strcpy(content, "This is a test file.");
 	if (fseek(disk, DATAOFFSET + BLOCKSIZE, SEEK_SET) == -1){
         free_and_exit();
     }
-	for (int i = 0; i<4; i++){
+	for (int i = 0; i<2; i++){
+		if (fwrite(content, 1, strlen(content), disk) != strlen(content))
+        	free_and_exit();
+	}
+	content[4]  = '\n';
+	content[7] = '\n';
+	for (int i = 0; i<2; i++){
 		if (fwrite(content, 1, strlen(content), disk) != strlen(content))
         	free_and_exit();
 	}

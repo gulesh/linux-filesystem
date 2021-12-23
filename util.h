@@ -24,7 +24,7 @@ enum open_fd_table_enum {FD_INODE, FD_SEEK_POS, FD_MAX};
 /* file descriptor array */
 extern int open_fd_table[ FD_TABLE_SIZE ][ FD_MAX ];
 
-#define MAX_OPEN 10
+#define MAX_OPEN 100
 
 
 typedef struct superblock {
