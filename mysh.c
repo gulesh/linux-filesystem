@@ -31,7 +31,7 @@ void absolute_path(char *, char *);
 int is_in_special(char*);
 void redirect();
 
-int pwd_fd = 0; 
+int pwd_fd = 0;  
 int redirect_flag = 0;
 char *output;
 /*redirection file descriptor*/
