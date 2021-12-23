@@ -7,6 +7,7 @@
 #include <ctype.h>
 #include <sys/types.h>      
 #include <sys/wait.h>
+#include <util.h>
 
 #include "fs.h"
 
@@ -174,7 +175,24 @@ char **parse(char* command){
 
 }
 
+int ls_exe(int isflag, char* flag, char* folder){
+	FILE* f;
+	if(isflag){
+		if(flag == "l"){
 
+		} else if(flag == "F"){
+
+		} else{
+			f = f_open(folder, "r");
+			dentry* temp = f_readdir();
+			while(temp != NULL){
+				printf("%d\n", temp->n);
+				printf("%d\n", temp->n);
+			}
+		}
+	}
+	
+}
 
 int execute(char **tokens){
 	/* returns 0 on success */
@@ -195,6 +213,10 @@ int execute(char **tokens){
 	else if (is_in_special(tokens[0])) {
 		redirect_flag = 0;
 		return parse_special_cmds(tokens);
+	}
+	else if (strcmp(tokens[0], "ls") == 0){
+		/* call ls here */
+
 	}
 	else{
 		int status;
@@ -228,6 +250,33 @@ int execute(char **tokens){
 	}
 	
 }
+
+int ls_exe(int isflag, char* flag, char* folder){
+	FILE* f;
+	if(isflag){
+		if(flag == "-l"){
+
+		} else if(flag == "-F"){
+
+		}  else{
+
+		}
+	} else{
+		f = f_open(folder, "r");
+		dentry* temp = f_readdir(f);
+		while(temp != NULL){
+			printf("%d\n", temp->n);
+			rintf("%d\n", temp->n);
+			temp = f_readdir(f); //update the temp until we reach NULL
+		}
+		if(temp == NULL){
+			return 1; //check if 0 or 1
+		} else{
+			return -1;
+		}
+	}	
+}
+
 
 int parse_special_cmds(char **tokens){
 	/* returns 0 if a special token is found */
@@ -444,7 +493,6 @@ int parse_special_cmds(char **tokens){
 		
 		return 0;
 
-
 	} else if (strcmp(tokens[0], "mkdir") == 0){
 		f_mkdir(tokens[1]);
 		return 0;
@@ -474,6 +522,18 @@ int is_in_special(char *cmd){
 			return 1;
 		}
 	}
+		fd = f_open(filename);
+		f_read(fd, 20, buffer);
+		printf("%d==%s\n", fd, (char*)buffer);
+	} else if (strcmp(tokens[0], "ls") == 0){
+		/* call ls here */
+		if(strcmp(token[1], "-l") || strcmp(token[1], "-F")){
+			ls_exe(1, token[1], token[2]);
+		} else{
+			ls_exe(0, NULL, token[1]);
+		}
+	}
+
 	return 0;
 }
 
